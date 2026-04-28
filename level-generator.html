@@ -1,0 +1,1717 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Level Generator</title>
+    <style>
+        :root {
+            --bg: #111521;
+            --bg-soft: #171d2d;
+            --panel: rgba(14, 18, 28, 0.92);
+            --panel-2: rgba(26, 34, 52, 0.94);
+            --panel-3: rgba(38, 48, 72, 0.92);
+            --line: rgba(255, 255, 255, 0.09);
+            --line-strong: rgba(255, 255, 255, 0.16);
+            --text: #edf3ff;
+            --muted: #95a6c6;
+            --accent: #7ef2bb;
+            --accent-2: #7db2ff;
+            --warning: #ffd57c;
+            --danger: #ff8e99;
+            --shadow: 0 24px 60px rgba(0, 0, 0, 0.36);
+            --radius: 20px;
+            --field-a: #2a3149;
+            --field-b: #1b2235;
+            --path-fill: rgba(126, 242, 187, 0.24);
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            margin: 0;
+            min-height: 100%;
+        }
+
+        body {
+            font-family: "Segoe UI", Tahoma, sans-serif;
+            color: var(--text);
+            background:
+                radial-gradient(circle at top left, rgba(125, 178, 255, 0.16), transparent 28%),
+                radial-gradient(circle at bottom right, rgba(126, 242, 187, 0.12), transparent 26%),
+                linear-gradient(180deg, #171b29 0%, #0d1018 100%);
+            padding: 22px;
+        }
+
+        .app {
+            width: min(1440px, 100%);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: minmax(0, 760px) minmax(320px, 1fr);
+            gap: 18px;
+            align-items: start;
+        }
+
+        .card {
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            backdrop-filter: blur(16px);
+        }
+
+        .card-header {
+            padding: 16px 18px;
+            border-bottom: 1px solid var(--line);
+            background: linear-gradient(180deg, rgba(125, 178, 255, 0.14), rgba(125, 178, 255, 0.03));
+        }
+
+        .title {
+            margin: 0;
+            font-size: 20px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            margin: 6px 0 0;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .field-wrap {
+            padding: 14px 14px 8px;
+        }
+
+        canvas {
+            display: block;
+            width: 100%;
+            height: auto;
+            border-radius: 18px;
+            background: linear-gradient(180deg, var(--field-a), var(--field-b));
+            cursor: crosshair;
+            touch-action: none;
+        }
+
+        .canvas-footer {
+            padding: 0 14px 14px;
+            display: grid;
+            grid-template-columns: 1fr auto;
+            gap: 12px;
+            align-items: center;
+        }
+
+        .chip-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            min-height: 34px;
+            padding: 8px 12px;
+            border-radius: 999px;
+            border: 1px solid var(--line);
+            background: rgba(255, 255, 255, 0.04);
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .chip strong {
+            color: var(--text);
+            font-size: 13px;
+        }
+
+        .side {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .controls {
+            padding: 16px 18px 18px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toolbar,
+        .actions {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .toolbar.wide,
+        .actions.wide {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 10px;
+        }
+
+        .field-grid {
+            display: grid;
+            gap: 8px;
+        }
+
+        .label {
+            color: var(--muted);
+            font-size: 12px;
+            font-weight: 600;
+            letter-spacing: 0.02em;
+        }
+
+        select,
+        textarea,
+        input {
+            width: 100%;
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            background: #0e1420;
+            color: #def3ff;
+            font: inherit;
+            outline: none;
+        }
+
+        select,
+        input {
+            min-height: 44px;
+            padding: 0 12px;
+        }
+
+        textarea {
+            min-height: 230px;
+            resize: vertical;
+            padding: 14px;
+            font: 13px/1.5 Consolas, "Courier New", monospace;
+        }
+
+        button {
+            border: 0;
+            border-radius: 12px;
+            min-height: 44px;
+            padding: 12px 14px;
+            font: inherit;
+            font-weight: 700;
+            color: #09111b;
+            background: linear-gradient(180deg, #82f4c0, #4fd99f);
+            cursor: pointer;
+            transition: transform 0.12s ease, filter 0.12s ease;
+        }
+
+        button:hover {
+            transform: translateY(-1px);
+            filter: brightness(1.04);
+        }
+
+        button.secondary {
+            color: var(--text);
+            background: linear-gradient(180deg, #3c4d72, #27324b);
+        }
+
+        button.warning {
+            color: #24170a;
+            background: linear-gradient(180deg, #ffd98a, #eab85f);
+        }
+
+        button.danger {
+            color: #fff2f3;
+            background: linear-gradient(180deg, #ff8e99, #ea6473);
+        }
+
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+        }
+
+        .stat {
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            border-radius: 14px;
+            padding: 12px 14px;
+        }
+
+        .stat-label {
+            display: block;
+            margin-bottom: 6px;
+            color: var(--muted);
+            font-size: 12px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: 700;
+        }
+
+        .hint {
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.6;
+        }
+
+        .status {
+            min-height: 20px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.4;
+        }
+
+        .status.ok {
+            color: var(--accent);
+        }
+
+        .status.error {
+            color: var(--danger);
+        }
+
+        .status.warn {
+            color: var(--warning);
+        }
+
+        .issue-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin: 0;
+            padding: 0;
+            list-style: none;
+        }
+
+        .issue-item {
+            padding: 10px 12px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 213, 124, 0.2);
+            background: rgba(255, 213, 124, 0.08);
+            color: #ffe5a9;
+            font-size: 13px;
+            line-height: 1.45;
+        }
+
+        .gallery {
+            display: grid;
+            gap: 10px;
+            max-height: 520px;
+            overflow: auto;
+        }
+
+        .preview-card {
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background: var(--panel-2);
+            padding: 12px;
+            cursor: pointer;
+            min-height: 0;
+            text-align: left;
+            color: var(--text);
+            font-weight: 400;
+            transition: border-color 0.12s ease, transform 0.12s ease, background 0.12s ease;
+        }
+
+        .preview-card:hover {
+            transform: translateY(-1px);
+            border-color: rgba(125, 178, 255, 0.35);
+        }
+
+        .preview-card.active {
+            border-color: rgba(126, 242, 187, 0.6);
+            background: rgba(41, 58, 74, 0.9);
+        }
+
+        .preview-head {
+            display: flex;
+            justify-content: space-between;
+            gap: 10px;
+            margin-bottom: 10px;
+            font-size: 13px;
+        }
+
+        .preview-head strong {
+            display: block;
+            color: var(--text);
+        }
+
+        .preview-meta {
+            color: var(--muted);
+            text-align: right;
+            white-space: nowrap;
+        }
+
+        .preview-svg {
+            width: 100%;
+            height: 118px;
+            display: block;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, 0.06);
+            background:
+                linear-gradient(180deg, rgba(58, 70, 102, 0.74), rgba(28, 36, 54, 0.92)),
+                linear-gradient(90deg, rgba(255,255,255,0.04), rgba(255,255,255,0.01));
+        }
+
+        .empty-note {
+            padding: 12px 14px;
+            border: 1px dashed var(--line-strong);
+            border-radius: 14px;
+            color: var(--muted);
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .point-list {
+            margin: 0;
+            padding: 0;
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            max-height: 280px;
+            overflow: auto;
+        }
+
+        .point-item {
+            display: grid;
+            grid-template-columns: 38px 1fr;
+            gap: 10px;
+            align-items: center;
+            padding: 10px 12px;
+            border-radius: 12px;
+            background: var(--panel-2);
+            border: 1px solid var(--line);
+            color: var(--text);
+            font-size: 13px;
+            cursor: pointer;
+        }
+
+        .point-item.active {
+            border-color: rgba(125, 178, 255, 0.5);
+            background: rgba(46, 60, 85, 0.96);
+        }
+
+        .point-index {
+            width: 38px;
+            height: 38px;
+            border-radius: 999px;
+            display: grid;
+            place-items: center;
+            background: rgba(125, 178, 255, 0.18);
+            color: #d8e6ff;
+            font-weight: 700;
+        }
+
+        .point-item.active .point-index {
+            background: rgba(126, 242, 187, 0.22);
+            color: #f2fffa;
+        }
+
+        .drop-target {
+            position: relative;
+        }
+
+        .drop-target.drag-over::after {
+            content: "Отпускай сюда";
+            position: absolute;
+            inset: 6px;
+            display: grid;
+            place-items: center;
+            border-radius: 12px;
+            border: 2px dashed rgba(126, 242, 187, 0.52);
+            background: rgba(9, 14, 22, 0.84);
+            color: var(--accent);
+            font-weight: 700;
+            pointer-events: none;
+        }
+
+        @media (max-width: 1220px) {
+            .app {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 720px) {
+            body {
+                padding: 14px;
+            }
+
+            .toolbar,
+            .actions,
+            .toolbar.wide,
+            .actions.wide,
+            .row {
+                grid-template-columns: 1fr;
+            }
+
+            .canvas-footer {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <section class="card">
+            <div class="card-header">
+                <h1 class="title">Редактор путей</h1>
+                <p class="subtitle">Можно править один путь руками, а можно вставить сразу весь объект `this.pathPresets` и быстро переключаться между уровнями по мини-превью.</p>
+            </div>
+            <div class="field-wrap">
+                <canvas id="field" width="725" height="645"></canvas>
+            </div>
+            <div class="canvas-footer">
+                <div class="chip-row">
+                    <div class="chip"><strong id="activePresetChip">easy #1</strong> активный пресет</div>
+                    <div class="chip"><strong id="selectedPointChip">нет</strong> выбранная точка</div>
+                </div>
+                <div class="chip-row">
+                    <div class="chip">Shift + клик: вставить точку в сегмент</div>
+                    <div class="chip">Del / Backspace: удалить</div>
+                </div>
+            </div>
+        </section>
+
+        <div class="side">
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Текущий пресет</h2>
+                    <p class="subtitle">Редактирование идет сразу в активный слот. Точки можно таскать мышкой, двигать стрелками и удалять по одной.</p>
+                </div>
+                <div class="controls">
+                    <div class="row">
+                        <label class="field-grid">
+                            <span class="label">Сложность</span>
+                            <select id="difficultySelect">
+                                <option value="easy">easy</option>
+                                <option value="medium">medium</option>
+                                <option value="hard">hard</option>
+                            </select>
+                        </label>
+                        <label class="field-grid">
+                            <span class="label">Слот</span>
+                            <select id="presetSelect"></select>
+                        </label>
+                    </div>
+
+                    <div class="toolbar wide">
+                        <button id="newPresetBtn">Новый слот</button>
+                        <button id="duplicatePresetBtn" class="secondary">Дублировать</button>
+                        <button id="deletePresetBtn" class="danger">Удалить слот</button>
+                    </div>
+
+                    <div id="status" class="status">Вставь пресет или весь `pathPresets`, и редактор сам соберет галерею.</div>
+
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-label">Точек</span>
+                            <span class="stat-value" id="pointCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Длина</span>
+                            <span class="stat-value" id="pathLength">0px</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Поворотов</span>
+                            <span class="stat-value" id="turnCount">0</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">Сетка</span>
+                            <span class="stat-value" id="gridInfo">57px</span>
+                        </div>
+                    </div>
+
+                    <div class="hint">
+                        ЛКМ по пустому месту: добавить точку в конец.<br />
+                        ЛКМ по точке: выбрать и перетаскивать.<br />
+                        ПКМ: удалить выбранную или ближайшую точку.<br />
+                        Стрелки: двигать выбранную точку на 1 клетку.
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Импорт набора</h2>
+                    <p class="subtitle">Сюда можно вставить целиком `this.pathPresets = { ... }`, просто объект `{ ... }` или даже кинуть `.js`/`.txt` файл прямо на поле.</p>
+                </div>
+                <div class="controls">
+                    <div class="actions wide">
+                        <button id="importLibraryBtn">Импортировать набор</button>
+                        <button id="syncLibraryBtn" class="secondary">Обновить вывод</button>
+                        <button id="copyLibraryBtn" class="secondary">Копировать набор</button>
+                    </div>
+                    <div class="stats">
+                        <div class="stat">
+                            <span class="stat-label">Всего пресетов</span>
+                            <span class="stat-value" id="totalPresetCount">1</span>
+                        </div>
+                        <div class="stat">
+                            <span class="stat-label">В текущей сложности</span>
+                            <span class="stat-value" id="difficultyPresetCount">1</span>
+                        </div>
+                    </div>
+                    <div class="drop-target" id="libraryDropZone">
+                        <textarea id="libraryOutput" spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Вывод пресета</h2>
+                    <p class="subtitle">Этот блок отдает только активный путь в формате `() => [ ... ]`, готовом для вставки в массив выбранной сложности.</p>
+                </div>
+                <div class="controls">
+                    <div class="actions wide">
+                        <button id="importPresetBtn">Импортировать пресет</button>
+                        <button id="copyPresetBtn" class="secondary">Копировать пресет</button>
+                        <button id="clearPointsBtn" class="warning">Очистить точки</button>
+                    </div>
+                    <div class="drop-target" id="presetDropZone">
+                        <textarea id="output" spellcheck="false"></textarea>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Проверка</h2>
+                    <p class="subtitle">Небольшая валидация помогает быстро заметить диагонали, дубли точек и слишком короткие пути.</p>
+                </div>
+                <div class="controls">
+                    <ul id="issueList" class="issue-list"></ul>
+                    <div id="issueEmpty" class="empty-note">Пока все выглядит нормально.</div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Мини-превью</h2>
+                    <p class="subtitle">Клик по карточке сразу откроет нужный путь для редактирования.</p>
+                </div>
+                <div class="controls">
+                    <div id="gallery" class="gallery"></div>
+                </div>
+            </section>
+
+            <section class="card">
+                <div class="card-header">
+                    <h2 class="title">Точки</h2>
+                    <p class="subtitle">Список удобно использовать, когда надо проверить порядок движения или выбрать конкретный узел.</p>
+                </div>
+                <div class="controls">
+                    <ul id="pointList" class="point-list"></ul>
+                </div>
+            </section>
+        </div>
+    </div>
+
+    <script>
+        const FIELD_WIDTH = 725;
+        const BASE_HEIGHT = 725;
+        const BOTTOM_PANEL_HEIGHT = 80;
+        const FIELD_HEIGHT = BASE_HEIGHT - BOTTOM_PANEL_HEIGHT;
+        const FIELD_PAD = 6;
+        const FIELD_SHIFT_X = 8;
+        const FIELD_SHIFT_Y = 8;
+        const GRID_COUNT = 11;
+        const STORAGE_KEY = "level-generator-state-v2";
+        const DIFFICULTIES = ["easy", "medium", "hard"];
+
+        const usableW = FIELD_WIDTH - FIELD_PAD * 2;
+        const usableH = FIELD_HEIGHT - FIELD_PAD * 2;
+        const grid = Math.floor(Math.min(usableW / GRID_COUNT, usableH / GRID_COUNT));
+        const cols = Math.floor(usableW / grid);
+        const rows = Math.floor(usableH / grid);
+        const fieldOffsetX = FIELD_PAD + Math.floor((usableW - cols * grid) / 2) + FIELD_SHIFT_X;
+        const fieldOffsetY = FIELD_PAD + Math.floor((usableH - rows * grid) / 2) + FIELD_SHIFT_Y;
+        const fieldLocalWidth = cols * grid;
+        const fieldLocalHeight = rows * grid;
+
+        const canvas = document.getElementById("field");
+        const ctx = canvas.getContext("2d");
+        const output = document.getElementById("output");
+        const libraryOutput = document.getElementById("libraryOutput");
+        const difficultySelect = document.getElementById("difficultySelect");
+        const presetSelect = document.getElementById("presetSelect");
+        const pointCount = document.getElementById("pointCount");
+        const pathLength = document.getElementById("pathLength");
+        const turnCount = document.getElementById("turnCount");
+        const gridInfo = document.getElementById("gridInfo");
+        const totalPresetCount = document.getElementById("totalPresetCount");
+        const difficultyPresetCount = document.getElementById("difficultyPresetCount");
+        const pointList = document.getElementById("pointList");
+        const issueList = document.getElementById("issueList");
+        const issueEmpty = document.getElementById("issueEmpty");
+        const gallery = document.getElementById("gallery");
+        const status = document.getElementById("status");
+        const activePresetChip = document.getElementById("activePresetChip");
+        const selectedPointChip = document.getElementById("selectedPointChip");
+
+        let library = createEmptyLibrary();
+        let currentDifficulty = "easy";
+        let currentIndex = 0;
+        let points = [];
+        let selectedPointIndex = -1;
+        let dragPointIndex = -1;
+        let hoverPoint = null;
+        let hoverSnapped = null;
+
+        gridInfo.textContent = `${grid}px`;
+
+        function createEmptyLibrary() {
+            return {
+                easy: [[]],
+                medium: [],
+                hard: []
+            };
+        }
+
+        function clamp(value, min, max) {
+            return Math.max(min, Math.min(max, value));
+        }
+
+        function clonePointArray(source) {
+            return Array.isArray(source)
+                ? source.map((pt) => ({ x: pt.x, y: pt.y }))
+                : [];
+        }
+
+        function setStatus(message, type = "") {
+            status.textContent = message;
+            status.className = `status${type ? ` ${type}` : ""}`;
+        }
+
+        function ensureLibraryShape() {
+            for (const difficulty of DIFFICULTIES) {
+                if (!Array.isArray(library[difficulty])) {
+                    library[difficulty] = [];
+                }
+            }
+        }
+
+        function ensureCurrentPresetExists() {
+            ensureLibraryShape();
+            if (!DIFFICULTIES.includes(currentDifficulty)) {
+                currentDifficulty = "easy";
+            }
+
+            if (library[currentDifficulty].length === 0) {
+                library[currentDifficulty].push([]);
+            }
+
+            currentIndex = clamp(currentIndex, 0, library[currentDifficulty].length - 1);
+            points = library[currentDifficulty][currentIndex];
+            if (!Array.isArray(points)) {
+                library[currentDifficulty][currentIndex] = [];
+                points = library[currentDifficulty][currentIndex];
+            }
+        }
+
+        function setActivePreset(difficulty, index, keepSelection = false) {
+            currentDifficulty = difficulty;
+            currentIndex = index;
+            ensureCurrentPresetExists();
+            if (!keepSelection) {
+                selectedPointIndex = -1;
+            }
+            difficultySelect.value = currentDifficulty;
+            refreshAll();
+        }
+
+        function localToGridIndex(value) {
+            return Math.round((value - grid / 2) / grid);
+        }
+
+        function snapLocalCoord(value, maxIndex) {
+            const index = clamp(Math.round((value - grid / 2) / grid), 0, maxIndex - 1);
+            return index * grid + grid / 2;
+        }
+
+        function normalizeLocalPoint(x, y) {
+            return {
+                x: snapLocalCoord(x, cols),
+                y: snapLocalCoord(y, rows)
+            };
+        }
+
+        function coordExpr(index) {
+            if (index <= 0) return "this.grid / 2";
+            if (index === 1) return "this.grid + this.grid / 2";
+            return `${index} * this.grid + this.grid / 2`;
+        }
+
+        function buildPresetText(pointSet = points) {
+            if (!Array.isArray(pointSet) || pointSet.length === 0) {
+                return "() => []";
+            }
+
+            const lines = pointSet.map((pt) => {
+                const ix = localToGridIndex(pt.x);
+                const iy = localToGridIndex(pt.y);
+                return `    { x: ${coordExpr(ix)}, y: ${coordExpr(iy)} },`;
+            });
+
+            return [
+                "() => [",
+                ...lines,
+                "]"
+            ].join("\n");
+        }
+
+        function buildDifficultyBlock(difficulty) {
+            const presets = library[difficulty] || [];
+            if (presets.length === 0) {
+                return `    ${difficulty}: [],`;
+            }
+
+            const blocks = presets.map((preset) => {
+                const presetText = buildPresetText(preset).split("\n");
+                return presetText.map((line, index) => {
+                    const suffix = index === presetText.length - 1 ? "," : "";
+                    return `        ${line}${suffix}`;
+                }).join("\n");
+            });
+
+            return [
+                `    ${difficulty}: [`,
+                blocks.join("\n\n"),
+                "    ],"
+            ].join("\n");
+        }
+
+        function buildLibraryText() {
+            return [
+                "this.pathPresets = {",
+                buildDifficultyBlock("easy"),
+                buildDifficultyBlock("medium"),
+                buildDifficultyBlock("hard"),
+                "};"
+            ].join("\n");
+        }
+
+        function parsePresetSource(raw) {
+            const source = String(raw || "").trim();
+            if (!source) {
+                throw new Error("Текст для импорта пресета пуст.");
+            }
+
+            const normalizedSource = source
+                .replace(/,\s*$/, "")
+                .replace(/this\.gridCount/g, "gridCount")
+                .replace(/this\.grid/g, "grid");
+
+            let result = new Function(
+                "grid",
+                "gridCount",
+                `"use strict"; return (${normalizedSource});`
+            )(grid, GRID_COUNT);
+
+            if (typeof result === "function") {
+                result = result.call({ grid, gridCount: GRID_COUNT });
+            }
+
+            if (!Array.isArray(result)) {
+                throw new Error("Импортируемый пресет должен возвращать массив точек.");
+            }
+
+            return result.map((pt, index) => {
+                if (!pt || typeof pt.x !== "number" || typeof pt.y !== "number" || Number.isNaN(pt.x) || Number.isNaN(pt.y)) {
+                    throw new Error(`Точка ${index + 1} имеет неверный формат.`);
+                }
+                return normalizeLocalPoint(pt.x, pt.y);
+            });
+        }
+
+        function sliceBalancedObject(source, openBraceIndex) {
+            let depth = 0;
+            let quote = "";
+            let escaped = false;
+            let lineComment = false;
+            let blockComment = false;
+
+            for (let i = openBraceIndex; i < source.length; i++) {
+                const char = source[i];
+                const next = source[i + 1];
+
+                if (lineComment) {
+                    if (char === "\n") {
+                        lineComment = false;
+                    }
+                    continue;
+                }
+
+                if (blockComment) {
+                    if (char === "*" && next === "/") {
+                        blockComment = false;
+                        i += 1;
+                    }
+                    continue;
+                }
+
+                if (quote) {
+                    if (escaped) {
+                        escaped = false;
+                        continue;
+                    }
+                    if (char === "\\") {
+                        escaped = true;
+                        continue;
+                    }
+                    if (char === quote) {
+                        quote = "";
+                    }
+                    continue;
+                }
+
+                if (char === "/" && next === "/") {
+                    lineComment = true;
+                    i += 1;
+                    continue;
+                }
+
+                if (char === "/" && next === "*") {
+                    blockComment = true;
+                    i += 1;
+                    continue;
+                }
+
+                if (char === "'" || char === "\"" || char === "`") {
+                    quote = char;
+                    continue;
+                }
+
+                if (char === "{") {
+                    depth += 1;
+                } else if (char === "}") {
+                    depth -= 1;
+                    if (depth === 0) {
+                        return source.slice(openBraceIndex, i + 1);
+                    }
+                }
+            }
+
+            throw new Error("Не удалось выделить объект pathPresets целиком.");
+        }
+
+        function extractLibraryBody(raw) {
+            const source = String(raw || "").trim();
+            if (!source) {
+                throw new Error("Текст для импорта набора пуст.");
+            }
+
+            if (source.startsWith("{") && source.endsWith("}")) {
+                return source;
+            }
+
+            const pathPresetIndex = source.search(/pathPresets\s*=/);
+            if (pathPresetIndex >= 0) {
+                const braceIndex = source.indexOf("{", pathPresetIndex);
+                if (braceIndex >= 0) {
+                    return sliceBalancedObject(source, braceIndex);
+                }
+            }
+
+            const braceIndex = source.indexOf("{");
+            if (braceIndex >= 0) {
+                return sliceBalancedObject(source, braceIndex);
+            }
+
+            throw new Error("Не удалось найти объект pathPresets в тексте.");
+        }
+
+        function sanitizePresetList(sourceList) {
+            if (!Array.isArray(sourceList)) {
+                return [];
+            }
+
+            return sourceList.map((entry, entryIndex) => {
+                let result = entry;
+
+                if (typeof result === "function") {
+                    result = result.call({ grid, gridCount: GRID_COUNT });
+                }
+
+                if (!Array.isArray(result)) {
+                    throw new Error(`Пресет ${entryIndex + 1} должен быть функцией или массивом точек.`);
+                }
+
+                return result.map((pt, pointIndex) => {
+                    if (!pt || typeof pt.x !== "number" || typeof pt.y !== "number" || Number.isNaN(pt.x) || Number.isNaN(pt.y)) {
+                        throw new Error(`Точка ${pointIndex + 1} в пресете ${entryIndex + 1} имеет неверный формат.`);
+                    }
+                    return normalizeLocalPoint(pt.x, pt.y);
+                });
+            });
+        }
+
+        function parseLibrarySource(raw) {
+            const body = extractLibraryBody(raw)
+                .replace(/this\.gridCount/g, "gridCount")
+                .replace(/this\.grid/g, "grid");
+
+            const parsed = new Function(
+                "grid",
+                "gridCount",
+                `"use strict"; return (${body});`
+            )(grid, GRID_COUNT);
+
+            if (!parsed || typeof parsed !== "object") {
+                throw new Error("Импорт набора должен вернуть объект с easy / medium / hard.");
+            }
+
+            return {
+                easy: sanitizePresetList(parsed.easy),
+                medium: sanitizePresetList(parsed.medium),
+                hard: sanitizePresetList(parsed.hard)
+            };
+        }
+
+        function getPathLength(pointSet = points) {
+            let total = 0;
+            for (let i = 1; i < pointSet.length; i++) {
+                total += Math.hypot(pointSet[i].x - pointSet[i - 1].x, pointSet[i].y - pointSet[i - 1].y);
+            }
+            return total;
+        }
+
+        function getTurnCount(pointSet = points) {
+            let turns = 0;
+            for (let i = 1; i < pointSet.length - 1; i++) {
+                const prev = pointSet[i - 1];
+                const current = pointSet[i];
+                const next = pointSet[i + 1];
+                const ax = current.x - prev.x;
+                const ay = current.y - prev.y;
+                const bx = next.x - current.x;
+                const by = next.y - current.y;
+                if (ax === 0 && bx === 0) continue;
+                if (ay === 0 && by === 0) continue;
+                turns += 1;
+            }
+            return turns;
+        }
+
+        function getValidationIssues(pointSet = points) {
+            const issues = [];
+
+            if (pointSet.length < 2) {
+                issues.push("Для игрового пути обычно нужно хотя бы 2 точки.");
+            }
+
+            for (let i = 1; i < pointSet.length; i++) {
+                const prev = pointSet[i - 1];
+                const current = pointSet[i];
+                if (prev.x === current.x && prev.y === current.y) {
+                    issues.push(`Точки ${i} и ${i + 1} совпадают.`);
+                }
+                if (prev.x !== current.x && prev.y !== current.y) {
+                    issues.push(`Сегмент ${i} -> ${i + 1} идет по диагонали.`);
+                }
+            }
+
+            const uniqueSet = new Set(pointSet.map((pt) => `${pt.x}:${pt.y}`));
+            if (uniqueSet.size !== pointSet.length) {
+                issues.push("В пути есть повторяющиеся координаты. Это не всегда плохо, но стоит перепроверить.");
+            }
+
+            return issues;
+        }
+
+        function getTotalPresetCount() {
+            return DIFFICULTIES.reduce((sum, difficulty) => sum + (library[difficulty]?.length || 0), 0);
+        }
+
+        function getActivePresetLabel() {
+            return `${currentDifficulty} #${currentIndex + 1}`;
+        }
+
+        function refreshPresetSelect() {
+            const presets = library[currentDifficulty] || [];
+            presetSelect.innerHTML = "";
+
+            presets.forEach((preset, index) => {
+                const option = document.createElement("option");
+                option.value = String(index);
+                option.textContent = `#${index + 1} · ${preset.length} тчк`;
+                if (index === currentIndex) {
+                    option.selected = true;
+                }
+                presetSelect.appendChild(option);
+            });
+        }
+
+        function refreshPointList() {
+            pointList.innerHTML = "";
+
+            if (points.length === 0) {
+                const empty = document.createElement("li");
+                empty.className = "empty-note";
+                empty.textContent = "Пока пусто. Кликни по полю, чтобы добавить первую точку.";
+                pointList.appendChild(empty);
+                return;
+            }
+
+            points.forEach((pt, index) => {
+                const ix = localToGridIndex(pt.x);
+                const iy = localToGridIndex(pt.y);
+                const item = document.createElement("li");
+                item.className = `point-item${index === selectedPointIndex ? " active" : ""}`;
+                item.innerHTML = `
+                    <span class="point-index">${index + 1}</span>
+                    <span>local: (${pt.x}, ${pt.y})<br>grid: (${ix}, ${iy})</span>
+                `;
+                item.addEventListener("click", () => {
+                    selectedPointIndex = index;
+                    refreshAll();
+                });
+                pointList.appendChild(item);
+            });
+        }
+
+        function buildPreviewSvg(pointSet) {
+            const backgroundGrid = [];
+
+            for (let x = 0; x <= cols; x++) {
+                const px = x * grid;
+                backgroundGrid.push(`<line x1="${px}" y1="0" x2="${px}" y2="${fieldLocalHeight}" stroke="rgba(255,255,255,0.08)" stroke-width="1" />`);
+            }
+
+            for (let y = 0; y <= rows; y++) {
+                const py = y * grid;
+                backgroundGrid.push(`<line x1="0" y1="${py}" x2="${fieldLocalWidth}" y2="${py}" stroke="rgba(255,255,255,0.08)" stroke-width="1" />`);
+            }
+
+            const linePoints = pointSet.map((pt) => `${pt.x},${pt.y}`).join(" ");
+            const dots = pointSet.map((pt, index) => {
+                const fill = index === 0 ? "#7db2ff" : index === pointSet.length - 1 ? "#7ef2bb" : "#dfe9ff";
+                return `<circle cx="${pt.x}" cy="${pt.y}" r="7" fill="${fill}" stroke="#0d1320" stroke-width="3" />`;
+            }).join("");
+
+            return `
+                <svg class="preview-svg" viewBox="0 0 ${fieldLocalWidth} ${fieldLocalHeight}" preserveAspectRatio="xMidYMid meet" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="0" width="${fieldLocalWidth}" height="${fieldLocalHeight}" rx="10" ry="10" fill="transparent" />
+                    ${backgroundGrid.join("")}
+                    <rect x="0.5" y="0.5" width="${fieldLocalWidth - 1}" height="${fieldLocalHeight - 1}" rx="10" ry="10" fill="none" stroke="rgba(255,255,255,0.18)" />
+                    ${linePoints ? `<polyline points="${linePoints}" fill="none" stroke="rgba(126, 242, 187, 0.22)" stroke-width="24" stroke-linecap="round" stroke-linejoin="round" />` : ""}
+                    ${linePoints ? `<polyline points="${linePoints}" fill="none" stroke="#b8ffe0" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" />` : ""}
+                    ${dots}
+                </svg>
+            `;
+        }
+
+        function refreshGallery() {
+            gallery.innerHTML = "";
+            let found = false;
+
+            for (const difficulty of DIFFICULTIES) {
+                const presets = library[difficulty] || [];
+
+                presets.forEach((preset, index) => {
+                    found = true;
+                    const card = document.createElement("button");
+                    card.type = "button";
+                    card.className = `preview-card${difficulty === currentDifficulty && index === currentIndex ? " active" : ""}`;
+                    card.innerHTML = `
+                        <div class="preview-head">
+                            <div>
+                                <strong>${difficulty} #${index + 1}</strong>
+                                <span>${preset.length} точек</span>
+                            </div>
+                            <div class="preview-meta">${Math.round(getPathLength(preset))}px</div>
+                        </div>
+                        ${buildPreviewSvg(preset)}
+                    `;
+                    card.addEventListener("click", () => {
+                        setActivePreset(difficulty, index);
+                        setStatus(`Открыт пресет ${difficulty} #${index + 1}.`, "ok");
+                    });
+                    gallery.appendChild(card);
+                });
+            }
+
+            if (!found) {
+                const empty = document.createElement("div");
+                empty.className = "empty-note";
+                empty.textContent = "Галерея появится после импорта набора или создания новых слотов.";
+                gallery.appendChild(empty);
+            }
+        }
+
+        function refreshIssues() {
+            const issues = getValidationIssues(points);
+            issueList.innerHTML = "";
+            issueEmpty.style.display = issues.length ? "none" : "block";
+
+            issues.forEach((message) => {
+                const item = document.createElement("li");
+                item.className = "issue-item";
+                item.textContent = message;
+                issueList.appendChild(item);
+            });
+        }
+
+        function refreshStats() {
+            pointCount.textContent = String(points.length);
+            pathLength.textContent = `${Math.round(getPathLength(points))}px`;
+            turnCount.textContent = String(getTurnCount(points));
+            totalPresetCount.textContent = String(getTotalPresetCount());
+            difficultyPresetCount.textContent = String((library[currentDifficulty] || []).length);
+            activePresetChip.textContent = getActivePresetLabel();
+            selectedPointChip.textContent = selectedPointIndex >= 0 ? `#${selectedPointIndex + 1}` : "нет";
+        }
+
+        function updateOutputs() {
+            output.value = buildPresetText(points);
+            libraryOutput.value = buildLibraryText();
+        }
+
+        function persistState() {
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify({
+                    library,
+                    currentDifficulty,
+                    currentIndex
+                }));
+            } catch (_) {
+                // localStorage не критичен для работы редактора
+            }
+        }
+
+        function restoreState() {
+            try {
+                const raw = localStorage.getItem(STORAGE_KEY);
+                if (!raw) return false;
+                const parsed = JSON.parse(raw);
+                if (!parsed || typeof parsed !== "object") return false;
+
+                library = {
+                    easy: sanitizePresetList(parsed.library?.easy || []),
+                    medium: sanitizePresetList(parsed.library?.medium || []),
+                    hard: sanitizePresetList(parsed.library?.hard || [])
+                };
+                currentDifficulty = DIFFICULTIES.includes(parsed.currentDifficulty) ? parsed.currentDifficulty : "easy";
+                currentIndex = Number.isFinite(parsed.currentIndex) ? parsed.currentIndex : 0;
+                ensureCurrentPresetExists();
+                return true;
+            } catch (_) {
+                return false;
+            }
+        }
+
+        function refreshAll() {
+            ensureCurrentPresetExists();
+            refreshPresetSelect();
+            refreshStats();
+            refreshPointList();
+            refreshIssues();
+            refreshGallery();
+            updateOutputs();
+            render();
+            persistState();
+        }
+
+        function canvasMouseToLocal(event) {
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mouseX = (event.clientX - rect.left) * scaleX;
+            const mouseY = (event.clientY - rect.top) * scaleY;
+
+            const inside =
+                mouseX >= fieldOffsetX &&
+                mouseX <= fieldOffsetX + fieldLocalWidth &&
+                mouseY >= fieldOffsetY &&
+                mouseY <= fieldOffsetY + fieldLocalHeight;
+
+            const local = normalizeLocalPoint(mouseX - fieldOffsetX, mouseY - fieldOffsetY);
+
+            return {
+                mouseX,
+                mouseY,
+                local,
+                inside
+            };
+        }
+
+        function getPointAtCanvasPosition(event, radius = 13) {
+            const { mouseX, mouseY } = canvasMouseToLocal(event);
+            for (let i = points.length - 1; i >= 0; i--) {
+                const px = fieldOffsetX + points[i].x;
+                const py = fieldOffsetY + points[i].y;
+                if (Math.hypot(mouseX - px, mouseY - py) <= radius) {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
+        function distanceToSegment(point, start, end) {
+            const dx = end.x - start.x;
+            const dy = end.y - start.y;
+            if (dx === 0 && dy === 0) {
+                return Math.hypot(point.x - start.x, point.y - start.y);
+            }
+
+            const t = clamp(
+                ((point.x - start.x) * dx + (point.y - start.y) * dy) / (dx * dx + dy * dy),
+                0,
+                1
+            );
+            const projX = start.x + dx * t;
+            const projY = start.y + dy * t;
+            return Math.hypot(point.x - projX, point.y - projY);
+        }
+
+        function getInsertIndex(localPoint) {
+            if (points.length < 2) return -1;
+
+            let bestIndex = -1;
+            let bestDistance = Infinity;
+
+            for (let i = 0; i < points.length - 1; i++) {
+                const distance = distanceToSegment(localPoint, points[i], points[i + 1]);
+                if (distance < bestDistance) {
+                    bestDistance = distance;
+                    bestIndex = i + 1;
+                }
+            }
+
+            return bestDistance <= grid * 0.5 ? bestIndex : -1;
+        }
+
+        function addPoint(localPoint, insertIndex = points.length) {
+            points.splice(insertIndex, 0, normalizeLocalPoint(localPoint.x, localPoint.y));
+            selectedPointIndex = insertIndex;
+            refreshAll();
+        }
+
+        function removePoint(index = selectedPointIndex) {
+            if (index < 0 || index >= points.length) {
+                if (points.length === 0) return;
+                points.pop();
+                selectedPointIndex = points.length - 1;
+            } else {
+                points.splice(index, 1);
+                selectedPointIndex = clamp(index, 0, points.length - 1);
+            }
+
+            if (points.length === 0) {
+                selectedPointIndex = -1;
+            }
+
+            refreshAll();
+        }
+
+        function moveSelectedPoint(dxSteps, dySteps) {
+            if (selectedPointIndex < 0 || !points[selectedPointIndex]) {
+                return false;
+            }
+
+            const point = points[selectedPointIndex];
+            points[selectedPointIndex] = normalizeLocalPoint(
+                point.x + dxSteps * grid,
+                point.y + dySteps * grid
+            );
+            refreshAll();
+            return true;
+        }
+
+        function drawGrid() {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,0.08)";
+            ctx.lineWidth = 1;
+
+            for (let x = 0; x <= cols; x++) {
+                const px = fieldOffsetX + x * grid;
+                ctx.beginPath();
+                ctx.moveTo(px, fieldOffsetY);
+                ctx.lineTo(px, fieldOffsetY + fieldLocalHeight);
+                ctx.stroke();
+            }
+
+            for (let y = 0; y <= rows; y++) {
+                const py = fieldOffsetY + y * grid;
+                ctx.beginPath();
+                ctx.moveTo(fieldOffsetX, py);
+                ctx.lineTo(fieldOffsetX + fieldLocalWidth, py);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawFieldFrame() {
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,0.18)";
+            ctx.lineWidth = 2;
+            ctx.strokeRect(fieldOffsetX, fieldOffsetY, fieldLocalWidth, fieldLocalHeight);
+            ctx.restore();
+        }
+
+        function drawPath() {
+            if (points.length === 0) return;
+
+            ctx.save();
+            ctx.lineJoin = "round";
+            ctx.lineCap = "round";
+
+            ctx.beginPath();
+            ctx.moveTo(fieldOffsetX + points[0].x, fieldOffsetY + points[0].y);
+            for (let i = 1; i < points.length; i++) {
+                ctx.lineTo(fieldOffsetX + points[i].x, fieldOffsetY + points[i].y);
+            }
+
+            ctx.strokeStyle = "rgba(126, 242, 187, 0.22)";
+            ctx.lineWidth = 25;
+            ctx.stroke();
+
+            ctx.strokeStyle = "#c1ffe1";
+            ctx.lineWidth = 4;
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawPointLabels() {
+            points.forEach((pt, index) => {
+                const x = fieldOffsetX + pt.x;
+                const y = fieldOffsetY + pt.y;
+                const isSelected = index === selectedPointIndex;
+                const isStart = index === 0;
+                const isEnd = index === points.length - 1;
+
+                ctx.save();
+                ctx.fillStyle = isSelected ? "#ffd57c" : isEnd ? "#7ef2bb" : isStart ? "#7db2ff" : "#d8e6ff";
+                ctx.strokeStyle = isSelected ? "#fff7df" : "rgba(9, 17, 27, 0.92)";
+                ctx.lineWidth = isSelected ? 4 : 3;
+                ctx.beginPath();
+                ctx.arc(x, y, isSelected ? 11 : 9, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.fillStyle = "#09111b";
+                ctx.font = "bold 12px Segoe UI";
+                ctx.textAlign = "center";
+                ctx.textBaseline = "middle";
+                ctx.fillText(String(index + 1), x, y + 0.5);
+                ctx.restore();
+            });
+        }
+
+        function drawGhostCursor() {
+            if (!hoverSnapped) return;
+
+            const x = fieldOffsetX + hoverSnapped.x;
+            const y = fieldOffsetY + hoverSnapped.y;
+
+            ctx.save();
+            ctx.strokeStyle = "rgba(255,255,255,0.38)";
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.arc(x, y, 10, 0, Math.PI * 2);
+            ctx.stroke();
+
+            if (hoverPoint !== null && hoverPoint >= 0) {
+                ctx.strokeStyle = "rgba(255, 213, 124, 0.95)";
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(fieldOffsetX + points[hoverPoint].x, fieldOffsetY + points[hoverPoint].y, 15, 0, Math.PI * 2);
+                ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawCanvasTitle() {
+            ctx.save();
+            ctx.fillStyle = "rgba(8, 12, 20, 0.55)";
+            ctx.fillRect(16, 14, 250, 56);
+            ctx.fillStyle = "#edf3ff";
+            ctx.font = "700 16px Segoe UI";
+            ctx.textAlign = "left";
+            ctx.fillText(getActivePresetLabel(), 28, 37);
+            ctx.fillStyle = "rgba(237,243,255,0.68)";
+            ctx.font = "13px Segoe UI";
+            ctx.fillText(`${points.length} точек · ${Math.round(getPathLength(points))}px`, 28, 57);
+            ctx.restore();
+        }
+
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, "#313853");
+            gradient.addColorStop(1, "#1b2132");
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            drawGrid();
+            drawFieldFrame();
+            drawPath();
+            drawPointLabels();
+            drawGhostCursor();
+            drawCanvasTitle();
+        }
+
+        function handleCanvasPointerDown(event) {
+            if (event.button !== 0) return;
+            const data = canvasMouseToLocal(event);
+            if (!data.inside) return;
+
+            const pointIndex = getPointAtCanvasPosition(event);
+            if (pointIndex >= 0) {
+                selectedPointIndex = pointIndex;
+                dragPointIndex = pointIndex;
+                refreshAll();
+                return;
+            }
+
+            if (event.shiftKey) {
+                const insertIndex = getInsertIndex(data.local);
+                if (insertIndex >= 0) {
+                    addPoint(data.local, insertIndex);
+                    dragPointIndex = insertIndex;
+                    setStatus(`Точка вставлена внутрь сегмента в ${getActivePresetLabel()}.`, "ok");
+                    return;
+                }
+            }
+
+            addPoint(data.local);
+            dragPointIndex = points.length - 1;
+            setStatus(`Точка добавлена в ${getActivePresetLabel()}.`, "ok");
+        }
+
+        function handleCanvasPointerMove(event) {
+            const data = canvasMouseToLocal(event);
+            hoverSnapped = data.inside ? data.local : null;
+            hoverPoint = data.inside ? getPointAtCanvasPosition(event) : null;
+
+            if (dragPointIndex >= 0 && data.inside) {
+                points[dragPointIndex] = normalizeLocalPoint(data.local.x, data.local.y);
+                selectedPointIndex = dragPointIndex;
+                refreshStats();
+                refreshPointList();
+                refreshIssues();
+                updateOutputs();
+                render();
+                persistState();
+                return;
+            }
+
+            render();
+        }
+
+        function handleCanvasPointerUp() {
+            dragPointIndex = -1;
+        }
+
+        function importCurrentPreset() {
+            const imported = parsePresetSource(output.value);
+            library[currentDifficulty][currentIndex] = imported;
+            points = library[currentDifficulty][currentIndex];
+            selectedPointIndex = imported.length ? 0 : -1;
+            refreshAll();
+            setStatus(`Импортирован пресет ${getActivePresetLabel()}.`, "ok");
+        }
+
+        function importWholeLibrary() {
+            const imported = parseLibrarySource(libraryOutput.value);
+            library = imported;
+            currentDifficulty = "easy";
+            currentIndex = 0;
+            ensureCurrentPresetExists();
+            refreshAll();
+            setStatus(`Импортирован набор. Пресетов: ${getTotalPresetCount()}.`, "ok");
+        }
+
+        async function copyText(text, successMessage) {
+            try {
+                await navigator.clipboard.writeText(text);
+                setStatus(successMessage, "ok");
+            } catch (_) {
+                setStatus("Не удалось скопировать через Clipboard API. Текст уже в поле, можно скопировать вручную.", "warn");
+            }
+        }
+
+        function createPresetAfterCurrent(fromCurrent = false) {
+            const nextIndex = currentIndex + 1;
+            const preset = fromCurrent ? clonePointArray(points) : [];
+            library[currentDifficulty].splice(nextIndex, 0, preset);
+            setActivePreset(currentDifficulty, nextIndex);
+            setStatus(fromCurrent ? "Создан дубликат активного пресета." : "Создан новый пустой слот.", "ok");
+        }
+
+        function deleteCurrentPreset() {
+            const presets = library[currentDifficulty];
+            if (presets.length <= 1) {
+                presets[0] = [];
+                setActivePreset(currentDifficulty, 0);
+                setStatus("Последний слот нельзя удалить, поэтому я просто очистил его.", "warn");
+                return;
+            }
+
+            presets.splice(currentIndex, 1);
+            setActivePreset(currentDifficulty, clamp(currentIndex, 0, presets.length - 1));
+            setStatus("Слот удален.", "ok");
+        }
+
+        function clearPoints() {
+            library[currentDifficulty][currentIndex] = [];
+            points = library[currentDifficulty][currentIndex];
+            selectedPointIndex = -1;
+            refreshAll();
+            setStatus("Точки очищены.", "ok");
+        }
+
+        function setupDropZone(zone, onText) {
+            const setDragState = (value) => zone.classList.toggle("drag-over", value);
+
+            zone.addEventListener("dragover", (event) => {
+                event.preventDefault();
+                setDragState(true);
+            });
+
+            zone.addEventListener("dragleave", () => {
+                setDragState(false);
+            });
+
+            zone.addEventListener("drop", (event) => {
+                event.preventDefault();
+                setDragState(false);
+
+                const file = event.dataTransfer?.files?.[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = () => onText(String(reader.result || ""));
+                    reader.readAsText(file);
+                    return;
+                }
+
+                const text = event.dataTransfer?.getData("text/plain");
+                if (text) {
+                    onText(text);
+                }
+            });
+        }
+
+        canvas.addEventListener("pointerdown", handleCanvasPointerDown);
+        canvas.addEventListener("pointermove", handleCanvasPointerMove);
+        canvas.addEventListener("pointerleave", () => {
+            hoverPoint = null;
+            hoverSnapped = null;
+            render();
+        });
+        window.addEventListener("pointerup", handleCanvasPointerUp);
+
+        canvas.addEventListener("contextmenu", (event) => {
+            event.preventDefault();
+            const pointIndex = getPointAtCanvasPosition(event);
+            if (pointIndex >= 0) {
+                removePoint(pointIndex);
+                setStatus("Точка удалена.", "ok");
+                return;
+            }
+
+            removePoint();
+            setStatus("Удалена последняя доступная точка.", "ok");
+        });
+
+        difficultySelect.addEventListener("change", () => {
+            setActivePreset(difficultySelect.value, 0);
+            setStatus(`Переключились на ${difficultySelect.value}.`, "ok");
+        });
+
+        presetSelect.addEventListener("change", () => {
+            setActivePreset(currentDifficulty, Number(presetSelect.value));
+            setStatus(`Открыт ${getActivePresetLabel()}.`, "ok");
+        });
+
+        document.getElementById("newPresetBtn").addEventListener("click", () => createPresetAfterCurrent(false));
+        document.getElementById("duplicatePresetBtn").addEventListener("click", () => createPresetAfterCurrent(true));
+        document.getElementById("deletePresetBtn").addEventListener("click", deleteCurrentPreset);
+        document.getElementById("importPresetBtn").addEventListener("click", () => {
+            try {
+                importCurrentPreset();
+            } catch (error) {
+                setStatus(error?.message || "Не удалось импортировать пресет.", "error");
+            }
+        });
+        document.getElementById("copyPresetBtn").addEventListener("click", () => copyText(output.value, "Пресет скопирован."));
+        document.getElementById("clearPointsBtn").addEventListener("click", clearPoints);
+        document.getElementById("importLibraryBtn").addEventListener("click", () => {
+            try {
+                importWholeLibrary();
+            } catch (error) {
+                setStatus(error?.message || "Не удалось импортировать набор.", "error");
+            }
+        });
+        document.getElementById("syncLibraryBtn").addEventListener("click", () => {
+            updateOutputs();
+            setStatus("Вывод набора обновлен из текущего состояния редактора.", "ok");
+        });
+        document.getElementById("copyLibraryBtn").addEventListener("click", () => copyText(libraryOutput.value, "Набор пресетов скопирован."));
+
+        output.addEventListener("focus", () => output.select());
+        libraryOutput.addEventListener("focus", () => libraryOutput.select());
+
+        document.addEventListener("keydown", (event) => {
+            const target = event.target;
+            const isTyping = target instanceof HTMLElement && (
+                target.tagName === "TEXTAREA" ||
+                target.tagName === "INPUT" ||
+                target.tagName === "SELECT" ||
+                target.isContentEditable
+            );
+
+            if (isTyping) return;
+
+            if (event.key === "Delete" || event.key === "Backspace") {
+                if (selectedPointIndex >= 0 || points.length > 0) {
+                    event.preventDefault();
+                    removePoint();
+                    setStatus("Точка удалена через клавиатуру.", "ok");
+                }
+                return;
+            }
+
+            if (event.key === "ArrowLeft" && moveSelectedPoint(-1, 0)) event.preventDefault();
+            if (event.key === "ArrowRight" && moveSelectedPoint(1, 0)) event.preventDefault();
+            if (event.key === "ArrowUp" && moveSelectedPoint(0, -1)) event.preventDefault();
+            if (event.key === "ArrowDown" && moveSelectedPoint(0, 1)) event.preventDefault();
+        });
+
+        setupDropZone(document.getElementById("libraryDropZone"), (text) => {
+            libraryOutput.value = text;
+            try {
+                importWholeLibrary();
+            } catch (error) {
+                setStatus(error?.message || "Не удалось импортировать сброшенный набор.", "error");
+            }
+        });
+
+        setupDropZone(document.getElementById("presetDropZone"), (text) => {
+            output.value = text;
+            try {
+                importCurrentPreset();
+            } catch (error) {
+                setStatus(error?.message || "Не удалось импортировать сброшенный пресет.", "error");
+            }
+        });
+
+        if (restoreState()) {
+            setStatus("Черновик восстановлен из localStorage.", "ok");
+        } else {
+            ensureCurrentPresetExists();
+            setStatus("Редактор готов. Можно вставлять pathPresets или собирать новый путь с нуля.");
+        }
+
+        refreshAll();
+    </script>
+</body>
+</html>
