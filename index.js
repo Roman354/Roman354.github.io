@@ -425,24 +425,24 @@
         // console.log(p.variables)
         p.localStorage = new LocalStorage();
         p.pathTextures = {
-            straight: p.loadImage('img/vert.png'),
-            corner: p.loadImage('img/ugl.png'),
-            crossroads: p.loadImage('img/crossroads.png'),
-            diag: p.loadImage('img/diag.png'),
-            diagCornerFill: p.loadImage('img/diagCornerFill.png'),
-            diagCross: p.loadImage('img/diagCross.png'),
-            diagHalfCross: p.loadImage('img/diagHalfCross.png'),
-            uglDiag: p.loadImage('img/uglDiag.png'),
-            vertDiag: p.loadImage('img/vertDiag.png'),
-            cave: p.loadImage('img/cave.png'),
-            damageBuff: p.loadImage('img/damageBuff.png'),
-            rangeBuff: p.loadImage('img/rangeBuff.png'),
-            speedBuff: p.loadImage('img/speedBuff.png'),
-            goldBuff: p.loadImage('img/goldBuff.png'),
-            damageDebuff: p.loadImage('img/damageDebuff.png'),
-            rangeDebuff: p.loadImage('img/rangeDebuff.png'),
-            speedDebuff: p.loadImage('img/speedDebuff.png'),
-            cellDebuff: p.loadImage('img/cellDebuff.png')
+            straight: p.loadImage('./img/vert.png'),
+            corner: p.loadImage('./img/ugl.png'),
+            crossroads: p.loadImage('./img/crossroads.png'),
+            diag: p.loadImage('./img/diag.png'),
+            diagCornerFill: p.loadImage('./img/diagCornerFill.png'),
+            diagCross: p.loadImage('./img/diagCross.png'),
+            diagHalfCross: p.loadImage('./img/diagHalfCross.png'),
+            uglDiag: p.loadImage('./img/uglDiag.png'),
+            vertDiag: p.loadImage('./img/vertDiag.png'),
+            cave: p.loadImage('./img/cave.png'),
+            damageBuff: p.loadImage('./img/damageBuff.png'),
+            rangeBuff: p.loadImage('./img/rangeBuff.png'),
+            speedBuff: p.loadImage('./img/speedBuff.png'),
+            goldBuff: p.loadImage('./img/goldBuff.png'),
+            damageDebuff: p.loadImage('./img/damageDebuff.png'),
+            rangeDebuff: p.loadImage('./img/rangeDebuff.png'),
+            speedDebuff: p.loadImage('./img/speedDebuff.png'),
+            cellDebuff: p.loadImage('./img/cellDebuff.png')
         };
         p.variables.gameMusic = new Audio('sounds/gameMusic.mp3'); 
         p.variables.gameMusic.loop = true;
@@ -480,20 +480,20 @@
                 clip.preload = "auto";
             }
         }
-        p.variables.soundBurnShot = new Audio('sounds/burn.wav');
-        p.variables.soundChainShot = new Audio('sounds/chain.wav');
-        p.variables.soundCleaverShot = new Audio('sounds/cleave.wav');
-        p.variables.soundPulseShot = new Audio('sounds/pulse.wav');
-        p.variables.soundSingularityShot = new Audio('sounds/singularity.wav');
-        p.variables.soundRocketShot  = new Audio('sounds/rocket.wav');
-        p.variables.soundOrbitalShot = new Audio('sounds/orbital.wav');
-        p.variables.soundPortalSpawn = new Audio('sounds/portal.wav');
-        p.variables.soundTowerBuild = new Audio('sounds/build.wav');
-        p.variables.soundTowerUpgrade1 = new Audio('sounds/upgrade1.mp3');
-        p.variables.soundTowerUpgrade2 = new Audio('sounds/upgrade2.mp3');
-        p.variables.soundTowerSell = new Audio('sounds/sell.wav');
-        p.variables.cat_revolver = new Audio('sounds/cat_revolver.flac');
-        p.goldTexture = p.loadImage('img/icons/gold.png'),
+        p.variables.soundBurnShot = new Audio('./sounds/burn.wav');
+        p.variables.soundChainShot = new Audio('./sounds/chain.wav');
+        p.variables.soundCleaverShot = new Audio('./sounds/cleave.wav');
+        p.variables.soundPulseShot = new Audio('./sounds/pulse.wav');
+        p.variables.soundSingularityShot = new Audio('./sounds/singularity.wav');
+        p.variables.soundRocketShot  = new Audio('./sounds/rocket.wav');
+        p.variables.soundOrbitalShot = new Audio('./sounds/orbital.wav');
+        p.variables.soundPortalSpawn = new Audio('./sounds/portal.wav');
+        p.variables.soundTowerBuild = new Audio('./sounds/build.wav');
+        p.variables.soundTowerUpgrade1 = new Audio('./sounds/upgrade1.mp3');
+        p.variables.soundTowerUpgrade2 = new Audio('./sounds/upgrade2.mp3');
+        p.variables.soundTowerSell = new Audio('./sounds/sell.wav');
+        p.variables.cat_revolver = new Audio('./sounds/cat_revolver.flac');
+        p.goldTexture = p.loadImage('./img/icons/gold.png'),
 
         p.TOWER_TYPES = {
             basic: {
@@ -512,9 +512,9 @@
                 angleOffset: Math.PI,
                 muzzle: { x: -20, y: 0 },
                 texture: [
-                    p.loadImage('img/towers/def1.png'),
-                    p.loadImage('img/towers/def2.png'),
-                    p.loadImage('img/towers/def3.png')
+                    p.loadImage('./img/towers/def1.png'),
+                    p.loadImage('./img/towers/def2.png'),
+                    p.loadImage('./img/towers/def3.png')
                 ],
                 levels: [
                 {
@@ -560,9 +560,9 @@
                     muzzle: { x: 20, y: -20 },
                     angleOffset: +Math.PI / 4,
                     texture: [
-                    p.loadImage('img/towers/snip1.png'),
-                    p.loadImage('img/towers/snip2.png'),
-                    p.loadImage('img/towers/snip3.png')
+                    p.loadImage('./img/towers/snip1.png'),
+                    p.loadImage('./img/towers/snip2.png'),
+                    p.loadImage('./img/towers/snip3.png')
                     ],
                     levels: [
                         {
@@ -594,94 +594,7 @@
                         }
                     ]
             },
-            /*
-            rapid: {
-                id: "rapid",
-                name: p.t("tower.rapid"),
-                cost: 35,
-                w:50,
-                h:50,
-                aimMode: "limited",
-                minAimAngle: -Math.PI / 2,
-                maxAimAngle: Math.PI / 2,
-                flipByTargetX: true,
-                originalFacing: "right",
-                muzzle: { x: 20, y: 5 },
-                angleOffset: 0,
-                texture: [
-                p.loadImage('img/towers/rapid1.png'),
-                p.loadImage('img/towers/rapid2.png'),
-                p.loadImage('img/towers/rapid3.png')
-                ],
-                levels: [
-                {
-                    range: 90,
-                    fireRate: 3,
-                    damage: 1.8,
-                    projSpeed: 250,
-                    bounces: 0,
-                    projectileCount: 2
-                },
-                {
-                    range: 100,
-                    fireRate: 3.5,
-                    damage: 1.9,
-                    projSpeed: 280,
-                    bounces: 0,
-                    projectileCount: 3
-                },
-                {
-                    range: 110,
-                    fireRate: 4,
-                    damage: 2,
-                    projSpeed: 320,
-                    bounces: 0,
-                    projectileCount: 4
-                }
-                ]
-            },
-            chain: {
-                id: "chain",
-                name: p.t("tower.chain"),
-                w:40,
-                h:40,
-                angleOffset: Math.PI,
-                muzzle: { x: -5, y: -15 },
-                cost: 30,
-                critMult: 2,
-                texture: [
-                p.loadImage('img/towers/chain1.png'),
-                p.loadImage('img/towers/chain2.png'),
-                p.loadImage('img/towers/chain3.png')
-                ],
-                levels: [
-                {
-                    range: 120,
-                    fireRate: 1.0,
-                    damage: 4,
-                    projSpeed: 400,
-                    bounces: 2,
-                    chainRange: 100
-                },
-                {
-                    range: 140,
-                    fireRate: 1.1,
-                    damage: 5,
-                    projSpeed: 420,
-                    bounces: 3,
-                    chainRange: 120
-                },
-                {
-                    range: 160,
-                    fireRate: 1.25,
-                    damage: 6,
-                    projSpeed: 450,
-                    bounces: 4,
-                    chainRange: 100
-                }
-                ]
-            },
-            */
+         
             cleaver: {
                 id: "cleaver",
                 name: p.t("tower.cleaver"),
@@ -700,14 +613,14 @@
                 primarySlowFactor: 0,
                 primarySlowDuration: 0.7,
                 texture: [
-                    p.loadImage('img/towers/cleaver1.png'),
-                    p.loadImage('img/towers/cleaver2.png'),
-                    p.loadImage('img/towers/cleaver3.png')
+                    p.loadImage('./img/towers/cleaver1.png'),
+                    p.loadImage('./img/towers/cleaver2.png'),
+                    p.loadImage('./img/towers/cleaver3.png')
                 ],
                 swordTexture: [
-                    p.loadImage('img/towers/sword1.png'),
-                    p.loadImage('img/towers/sword2.png'),
-                    p.loadImage('img/towers/sword3.png')
+                    p.loadImage('./img/towers/sword1.png'),
+                    p.loadImage('./img/towers/sword2.png'),
+                    p.loadImage('./img/towers/sword3.png')
                 ],
                 color: [255, 170, 110],
                 levels: [
@@ -753,9 +666,9 @@
                 flipByTargetX: true,
                 originalFacing: "right",
                 texture: [
-                    p.loadImage('img/towers/multishot1.png'),
-                    p.loadImage('img/towers/multishot2.png'),
-                    p.loadImage('img/towers/multishot3.png')
+                    p.loadImage('./img/towers/multishot1.png'),
+                    p.loadImage('./img/towers/multishot2.png'),
+                    p.loadImage('./img/towers/multishot3.png')
                 ],
                 color: [240, 210, 120],
                 levels: [
@@ -796,9 +709,9 @@
                 muzzle: { x: -20, y: 0 },
                 color: [120, 200, 255],
                 texture: [
-                    p.loadImage('img/towers/slow1.png'),
-                    p.loadImage('img/towers/slow2.png'),
-                    p.loadImage('img/towers/slow3.png')
+                    p.loadImage('./img/towers/slow1.png'),
+                    p.loadImage('./img/towers/slow2.png'),
+                    p.loadImage('./img/towers/slow3.png')
                 ],
                 levels: [
                 {
@@ -843,9 +756,9 @@
                 angleOffset: Math.PI,
                 muzzle: { x: -20, y: 0 },
                 texture: [
-                    p.loadImage('img/towers/burn1.png'),
-                    p.loadImage('img/towers/burn2.png'),
-                    p.loadImage('img/towers/burn3.png')
+                    p.loadImage('./img/towers/burn1.png'),
+                    p.loadImage('./img/towers/burn2.png'),
+                    p.loadImage('./img/towers/burn3.png')
                 ],
                 levels: [
                     {
@@ -887,9 +800,9 @@
                 w: 42,
                 h: 42,
                 texture: [
-                    p.loadImage('img/towers/pulse1.png'),
-                    p.loadImage('img/towers/pulse2.png'),
-                    p.loadImage('img/towers/pulse3.png')
+                    p.loadImage('./img/towers/pulse1.png'),
+                    p.loadImage('./img/towers/pulse2.png'),
+                    p.loadImage('./img/towers/pulse3.png')
                 ],
                 color: [200, 120, 255],
 
@@ -925,9 +838,9 @@
                 angleOffset: Math.PI,
                 muzzle: { x: -20, y: 0 },
                 texture: [
-                    p.loadImage('img/towers/support1.png'),
-                    p.loadImage('img/towers/support2.png'),
-                    p.loadImage('img/towers/support3.png')
+                    p.loadImage('./img/towers/support1.png'),
+                    p.loadImage('./img/towers/support2.png'),
+                    p.loadImage('./img/towers/support3.png')
                 ],
                 color: [120, 255, 180],
 
@@ -972,9 +885,9 @@
                 w: 46,
                 h: 46,
                 texture: [
-                    p.loadImage('img/towers/singularity1.png'),
-                    p.loadImage('img/towers/singularity2.png'),
-                    p.loadImage('img/towers/singularity3.png')
+                    p.loadImage('./img/towers/singularity1.png'),
+                    p.loadImage('./img/towers/singularity2.png'),
+                    p.loadImage('./img/towers/singularity3.png')
                 ],
                 color: [140, 120, 255],
 
@@ -1028,9 +941,9 @@
                 muzzle: { x: -18, y: 0 },
                 projectileType: "splash",
                 texture: [
-                    p.loadImage('img/towers/rocket1.png'),
-                    p.loadImage('img/towers/rocket2.png'),
-                    p.loadImage('img/towers/rocket3.png')
+                    p.loadImage('./img/towers/rocket1.png'),
+                    p.loadImage('./img/towers/rocket2.png'),
+                    p.loadImage('./img/towers/rocket3.png')
                 ],
                 color: [255, 140, 90],
 
@@ -1068,9 +981,9 @@
                 w: 46,
                 h: 46,
                 texture: [
-                    p.loadImage('img/towers/orbital1.png'),
-                    p.loadImage('img/towers/orbital2.png'),
-                    p.loadImage('img/towers/orbital3.png')
+                    p.loadImage('./img/towers/orbital1.png'),
+                    p.loadImage('./img/towers/orbital2.png'),
+                    p.loadImage('./img/towers/orbital3.png')
                 ],
                 color: [190, 210, 255],
 
@@ -1114,9 +1027,9 @@
                 angleOffset: Math.PI,
                 muzzle: { x: -18, y: 0 },
                 texture: [
-                    p.loadImage('img/towers/cat_revolver1.png'),
-                    p.loadImage('img/towers/cat_revolver2.png'),
-                    p.loadImage('img/towers/cat_revolver3.png')
+                    p.loadImage('./img/towers/cat_revolver1.png'),
+                    p.loadImage('./img/towers/cat_revolver2.png'),
+                    p.loadImage('./img/towers/cat_revolver3.png')
                 ],
                 color: [255, 200, 150],
 
@@ -1165,46 +1078,46 @@
         };
 
         p.enemyTextures = {
-            fast: p.loadImage('img/units/enemy_fast.png'),
-            normal: [p.loadImage('img/units/enemy_normal.png'), p.loadImage('img/units/enemy_normal1.png'), p.loadImage('img/units/enemy_normal2.png')], 
-            tank: p.loadImage('img/units/enemy_tank.png'),
-            regen: p.loadImage('img/units/enemy_regen.png'),
-            shield: p.loadImage('img/units/enemy_shield.png'),
+            fast: p.loadImage('./img/units/enemy_fast.png'),
+            normal: [p.loadImage('./img/units/enemy_normal.png'), p.loadImage('./img/units/enemy_normal1.png'), p.loadImage('./img/units/enemy_normal2.png')], 
+            tank: p.loadImage('./img/units/enemy_tank.png'),
+            regen: p.loadImage('./img/units/enemy_regen.png'),
+            shield: p.loadImage('./img/units/enemy_shield.png'),
             split: [
-                p.loadImage('img/units/split1.png'),
-                p.loadImage('img/units/split2.png'),
+                p.loadImage('./img/units/split1.png'),
+                p.loadImage('./img/units/split2.png'),
             ],
-            ghost: p.loadImage('img/units/ghost.png'),
-            jammer: p.loadImage('img/units/jammer.png'),
-            decoy_master: p.loadImage('img/units/decoy_master.png'),
-            buffer: p.loadImage('img/units/buffer.png'),
-            treasure: p.loadImage('img/units/treasure.png'),
-            chest: p.loadImage('img/units/chest.png'),
-            teleporter:  p.loadImage('img/units/teleporter.png'),
-            portal: p.loadImage('img/units/portal.png'),
+            ghost: p.loadImage('./img/units/ghost.png'),
+            jammer: p.loadImage('./img/units/jammer.png'),
+            decoy_master: p.loadImage('./img/units/decoy_master.png'),
+            buffer: p.loadImage('./img/units/buffer.png'),
+            treasure: p.loadImage('./img/units/treasure.png'),
+            chest: p.loadImage('./img/units/chest.png'),
+            teleporter:  p.loadImage('./img/units/teleporter.png'),
+            portal: p.loadImage('./img/units/portal.png'),
             boss_tank: [
-                p.loadImage('img/units/boss_tank_1.png'),
-                p.loadImage('img/units/boss_tank_2.png'),
-                p.loadImage('img/units/boss_tank_3.png')
+                p.loadImage('./img/units/boss_tank_1.png'),
+                p.loadImage('./img/units/boss_tank_2.png'),
+                p.loadImage('./img/units/boss_tank_3.png')
             ],
             boss_split: [
-                p.loadImage('img/units/boss_split_0.png'),
-                p.loadImage('img/units/boss_split_1.png'),
-                p.loadImage('img/units/boss_split_2.png'),
-                p.loadImage('img/units/boss_split_3.png'),
-                p.loadImage('img/units/boss_split_4.png'),
+                p.loadImage('./img/units/boss_split_0.png'),
+                p.loadImage('./img/units/boss_split_1.png'),
+                p.loadImage('./img/units/boss_split_2.png'),
+                p.loadImage('./img/units/boss_split_3.png'),
+                p.loadImage('./img/units/boss_split_4.png'),
             ],
             boss_trio : [
-                p.loadImage('img/units/boss_trio1.png'),
-                p.loadImage('img/units/boss_trio2.png'),
-                p.loadImage('img/units/boss_trio3.png'),
+                p.loadImage('./img/units/boss_trio1.png'),
+                p.loadImage('./img/units/boss_trio2.png'),
+                p.loadImage('./img/units/boss_trio3.png'),
             ],
-            boss_trio_elite: p.loadImage('img/units/boss_trio_elite.png'),
-            boss_summoner: p.loadImage('img/units/boss_summoner.png'),
-            end_game_unit: p.loadImage('img/units/end_game_unit.png'),
-            end_game_unit_hero: p.loadImage('img/units/end_game_unit_hero.png'),
-            boss_healer: p.loadImage('img/units/boss_healer.png'),
-            boss_warp: p.loadImage('img/units/boss_warp.png'),
+            boss_trio_elite: p.loadImage('./img/units/boss_trio_elite.png'),
+            boss_summoner: p.loadImage('./img/units/boss_summoner.png'),
+            end_game_unit: p.loadImage('./img/units/end_game_unit.png'),
+            end_game_unit_hero: p.loadImage('./img/units/end_game_unit_hero.png'),
+            boss_healer: p.loadImage('./img/units/boss_healer.png'),
+            boss_warp: p.loadImage('./img/units/boss_warp.png'),
     
         };
 
@@ -2614,19 +2527,19 @@
         };
 
         p.icons = {
-            damage: p.loadImage("img/icons/damage.png"),
-            range: p.loadImage("img/icons/range.png"),
-            fireRate: p.loadImage("img/icons/fireRate.png"),
-            info: p.loadImage("img/icons/info.png"),
-            multishot: p.loadImage("img/icons/multishot.png"),
-            aoe: p.loadImage("img/icons/AOE.png"),
-            slow: p.loadImage("img/icons/slow.png"),
-            // upgrade: p.loadImage("img/icons/upgrade.png"),
+            damage: p.loadImage("./img/icons/damage.png"),
+            range: p.loadImage("./img/icons/range.png"),
+            fireRate: p.loadImage("./img/icons/fireRate.png"),
+            info: p.loadImage("./img/icons/info.png"),
+            multishot: p.loadImage("./img/icons/multishot.png"),
+            aoe: p.loadImage("./img/icons/AOE.png"),
+            slow: p.loadImage("./img/icons/slow.png"),
+            // upgrade: p.loadImage("./img/icons/upgrade.png"),
             heal: p.variables.buttTexturePlus,
-            // sell: p.loadImage("img/icons/sell.svg"),
-            bounce: p.loadImage("img/icons/bounce.png"),
-            crit: p.loadImage("img/icons/crit.png"),
-            fire: p.loadImage("img/icons/fire.png"),
+            // sell: p.loadImage("./img/icons/sell.svg"),
+            bounce: p.loadImage("./img/icons/bounce.png"),
+            crit: p.loadImage("./img/icons/crit.png"),
+            fire: p.loadImage("./img/icons/fire.png"),
             gold: p.goldTexture,
         };
     };
@@ -3161,26 +3074,26 @@
     class Variables 
     {
         constructor(){
-            this.clockImg = p.loadImage('img/clock.png');
-            this.scoreTexture = p.loadImage('img/score.png');
-            this.buttTextureFS =  p.loadImage('img/fullscreen.png');
-            this.buttTextureFsHov =  p.loadImage('img/fullscreenHover.png');
-            this.buttTextureS =  p.loadImage('img/settings.png');
-            this.buttTextureSHov =  p.loadImage('img/settingsHover.png');
+            this.clockImg = p.loadImage('./img/clock.png');
+            this.scoreTexture = p.loadImage('./img/score.png');
+            this.buttTextureFS =  p.loadImage('./img/fullscreen.png');
+            this.buttTextureFsHov =  p.loadImage('./img/fullscreenHover.png');
+            this.buttTextureS =  p.loadImage('./img/settings.png');
+            this.buttTextureSHov =  p.loadImage('./img/settingsHover.png');
 
   
            
-            this.buttTexture = p.loadImage('img/buttonNormal.png');
-            this.buttTextureHov = p.loadImage('img/buttonHover.png');
-            this.buttTextureStart = p.loadImage('img/buttonStartNormal.png');
+            this.buttTexture = p.loadImage('./img/buttonNormal.png');
+            this.buttTextureHov = p.loadImage('./img/buttonHover.png');
+            this.buttTextureStart = p.loadImage('./img/buttonStartNormal.png');
            
-            this.buttStartWave = this.buttTexture;//p.loadImage('img/startWave.png');
-            this.buttStartWaveHov = this.buttTextureHov;//p.loadImage('img/startWaveHov.png');
-            this.buttTextureStartHov = p.loadImage('img/buttonStartHover.png');
-            this.buttTexturePlus = p.loadImage('img/Plus.png');
-            this.textureWinLose = p.loadImage('img/winLoseBack.png');
-            this.buttTextureMinus = p.loadImage('img/Minus.png');
-            this.settingsTexture = p.loadImage('img/settingsBack.png'); 
+            this.buttStartWave = this.buttTexture;//p.loadImage('./img/startWave.png');
+            this.buttStartWaveHov = this.buttTextureHov;//p.loadImage('./img/startWaveHov.png');
+            this.buttTextureStartHov = p.loadImage('./img/buttonStartHover.png');
+            this.buttTexturePlus = p.loadImage('./img/Plus.png');
+            this.textureWinLose = p.loadImage('./img/winLoseBack.png');
+            this.buttTextureMinus = p.loadImage('./img/Minus.png');
+            this.settingsTexture = p.loadImage('./img/settingsBack.png'); 
 
             this.textFontFontick = p.loadFont("fonts/Fontick/fontick.otf");
             this.textFontMP = p.loadFont("fonts/mpro/multiroundpro.otf");
@@ -3297,7 +3210,7 @@
                 hard: p.DIFFICULTY_PRESETS?.hard?.money ?? 150
             };
             // this.intervalTime;
-            this.textureBackground = p.loadImage('img/gameBack.png');
+            this.textureBackground = p.loadImage('./img/gameBack.png');
             // this.floor = 0;
             this.floorCoord = {x:0, y: p.height -75, w:p.width, h:20};
 
@@ -14055,9 +13968,9 @@
             // ===== Speed buttons =====
             if (this.areSpeedButtonsVisible()) {
                 const { btnW, btnH, speedGap, baseX, baseY, speeds } = this.getSpeedButtonsLayout();
-                if (!p.icons.speed1) p.icons.speed1 = p.loadImage("img/icons/speed1.png");
-                if (!p.icons.speed2) p.icons.speed2 = p.loadImage("img/icons/speed2.png");
-                if (!p.icons.speed3) p.icons.speed3 = p.loadImage("img/icons/speed3.png");
+                if (!p.icons.speed1) p.icons.speed1 = p.loadImage("./img/icons/speed1.png");
+                if (!p.icons.speed2) p.icons.speed2 = p.loadImage("./img/icons/speed2.png");
+                if (!p.icons.speed3) p.icons.speed3 = p.loadImage("./img/icons/speed3.png");
                 const speedIcons = [p.icons.speed2, p.icons.speed1, p.icons.speed2, p.icons.speed3];
 
                 p.push();
