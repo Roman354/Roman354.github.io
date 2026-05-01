@@ -444,9 +444,9 @@
             speedDebuff: p.loadImage('./img/speedDebuff.png'),
             cellDebuff: p.loadImage('./img/cellDebuff.png')
         };
-        p.variables.gameMusic = new Audio('sounds/gameMusic.mp3'); 
+        p.variables.gameMusic = new Audio('sounds/gamemusic.mp3'); 
         p.variables.gameMusic.loop = true;
-        p.variables.gameLoseMusic = new Audio('sounds/gameLoseSound.mp3'); 
+        p.variables.gameLoseMusic = new Audio('sounds/gamelosesound.mp3'); 
         p.variables.soundSniperShot = new Audio('sounds/sniper_shot.mp3');
         p.variables.soundBasicShot = new Audio('sounds/bound.wav');
         p.variables.soundBasicShots = [
@@ -2529,7 +2529,7 @@
         p.icons = {
             damage: p.loadImage("./img/icons/damage.png"),
             range: p.loadImage("./img/icons/range.png"),
-            fireRate: p.loadImage("./img/icons/fireRate.png"),
+            fireRate: p.loadImage("./img/icons/firerate.png"),
             info: p.loadImage("./img/icons/info.png"),
             multishot: p.loadImage("./img/icons/multishot.png"),
             aoe: p.loadImage("./img/icons/AOE.png"),
@@ -3077,25 +3077,25 @@
             this.clockImg = p.loadImage('./img/clock.png');
             this.scoreTexture = p.loadImage('./img/score.png');
             this.buttTextureFS =  p.loadImage('./img/fullscreen.png');
-            this.buttTextureFsHov =  p.loadImage('./img/fullscreenHover.png');
+            this.buttTextureFsHov =  p.loadImage('./img/fullscreenhover.png');
             this.buttTextureS =  p.loadImage('./img/settings.png');
-            this.buttTextureSHov =  p.loadImage('./img/settingsHover.png');
+            this.buttTextureSHov =  p.loadImage('./img/settingshover.png');
 
   
            
-            this.buttTexture = p.loadImage('./img/buttonNormal.png');
-            this.buttTextureHov = p.loadImage('./img/buttonHover.png');
-            this.buttTextureStart = p.loadImage('./img/buttonStartNormal.png');
+            this.buttTexture = p.loadImage('./img/buttonnormal.png');
+            this.buttTextureHov = p.loadImage('./img/buttonhover.png');
+            this.buttTextureStart = p.loadImage('./img/buttonstartnormal.png');
            
             this.buttStartWave = this.buttTexture;//p.loadImage('./img/startWave.png');
             this.buttStartWaveHov = this.buttTextureHov;//p.loadImage('./img/startWaveHov.png');
-            this.buttTextureStartHov = p.loadImage('./img/buttonStartHover.png');
-            this.buttTexturePlus = p.loadImage('./img/Plus.png');
-            this.textureWinLose = p.loadImage('./img/winLoseBack.png');
-            this.buttTextureMinus = p.loadImage('./img/Minus.png');
-            this.settingsTexture = p.loadImage('./img/settingsBack.png'); 
+            this.buttTextureStartHov = p.loadImage('./img/buttonstarthover.png');
+            this.buttTexturePlus = p.loadImage('./img/plus.png');
+            this.textureWinLose = p.loadImage('./img/winloseback.png');
+            this.buttTextureMinus = p.loadImage('./img/minus.png');
+            this.settingsTexture = p.loadImage('./img/settingsback.png'); 
 
-            this.textFontFontick = p.loadFont("fonts/Fontick/fontick.otf");
+            this.textFontFontick = p.loadFont("fonts/fontick/fontick.otf");
             this.textFontMP = p.loadFont("fonts/mpro/multiroundpro.otf");
 
             this.fullscreen = false;
