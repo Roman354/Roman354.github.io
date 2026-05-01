@@ -3210,7 +3210,7 @@
                 hard: p.DIFFICULTY_PRESETS?.hard?.money ?? 150
             };
             // this.intervalTime;
-            this.textureBackground = p.loadImage('./img/gameBack.png');
+            this.textureBackground = p.loadImage('./img/gameback.png');
             // this.floor = 0;
             this.floorCoord = {x:0, y: p.height -75, w:p.width, h:20};
 
