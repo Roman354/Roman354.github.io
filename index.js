@@ -3042,9 +3042,10 @@
             clicked = p.checkClickButtons(p.mouseX, p.mouseY, 'gameEnd') || clicked;
         }
 
-         // Клик в мюню настроек
-        if(p.menu.settingModal )
-            clicked = p.checkClickButtons(p.mouseX, p.mouseY, 'sets') || clicked;
+         // Клик в меню настроек
+        if (p.menu.settingModal) {
+            clicked = p.menu.handleSettingsModalClick?.(p.mouseX, p.mouseY) || clicked;
+        }
 
         if (!clicked && p.game?.handleTowerDamagePanelClick(p.mouseX, p.mouseY)) {
             return;
@@ -3076,6 +3077,20 @@
         constructor(){
             this.clockImg = p.loadImage('./img/clock.png');
             this.scoreTexture = p.loadImage('./img/score.png');
+            this.waveTexture = p.loadImage('./img/wave.png');
+            this.bottomHudTexture = p.loadImage('./img/back.png');
+            this.rightMenuTexture = p.loadImage('./img/backRightMenu.png');
+            this.backLegendaryTexture = p.loadImage('./img/backLegendary.png');
+            this.backDefaultTexture = p.loadImage('./img/backDefault.png');
+            this.backRareTexture = p.loadImage('./img/backRare.png');
+            this.backCantBuyTexture = p.loadImage('./img/backCantBuy.png');
+            this.settingsIcons = {
+                sounds: p.loadImage('./img/icons/sounds.png'),
+                music: p.loadImage('./img/icons/music.png'),
+                language: p.loadImage('./img/icons/language.png'),
+                graphics: p.loadImage('./img/icons/graphics.png'),
+                attack_readiness_bar: p.loadImage('./img/icons/attack_bar.png')
+            };
             this.buttTextureFS =  p.loadImage('./img/fullscreen.png');
             this.buttTextureFsHov =  p.loadImage('./img/fullscreenhover.png');
             this.buttTextureS =  p.loadImage('./img/settings.png');
@@ -3094,6 +3109,8 @@
             this.textureWinLose = p.loadImage('./img/winloseback.png');
             this.buttTextureMinus = p.loadImage('./img/minus.png');
             this.settingsTexture = p.loadImage('./img/settingsback.png'); 
+            this.backPopupTexture = p.loadImage('./img/icons/back_popup.png');
+            this.linePopupTexture = p.loadImage('./img/icons/line_popup.png');
 
             this.textFontFontick = p.loadFont("fonts/fontick/fontick.otf");
             this.textFontMP = p.loadFont("fonts/mpro/multiroundpro.otf");
@@ -3392,11 +3409,11 @@
         generateArrButtons()
         {
            
-            p.buttonsArr.push(new Buttons('fullScreen', ['' , 0 , 0, 20 , p.variables.buttTextureFS,  p.variables.buttTextureFsHov], 640, 690 , 0 , 30 , 30 , 1 , 'set', () =>{  
+            p.buttonsArr.push(new Buttons('fullScreen', ['' , 0 , 0, 20 , p.variables.buttTextureFS,  p.variables.buttTextureFsHov], 600, 670 , 0 , 50 , 50 , 1 , 'set', () =>{  
                 p.toggleFullscreen();
     
             }));
-            p.buttonsArr.push(new Buttons('Settings', ['' , 0 , 0, 20 , p.variables.buttTextureS,  p.variables.buttTextureSHov], 680, 690 , 0 , 30 , 30 , 1 , 'set', () =>{  
+            p.buttonsArr.push(new Buttons('Settings', ['' , 0 , 0, 20 , p.variables.buttTextureS,  p.variables.buttTextureSHov], 660, 670 , 0 , 50 , 50 , 1 , 'set', () =>{  
                 this.settingModal = true;
             }));
 
@@ -3562,36 +3579,27 @@
         }
 
         getSettingsModalMetrics(){
-            const modalW = Math.round(p.width * 0.58);
-            const modalH = Math.max(470, Math.round(p.height * 0.6));
+            const modalW = Math.min(680, Math.round(p.width * 0.76));
+            const modalH = Math.max(560, Math.round(p.height * 0.78));
             const modalLeft = Math.round((p.width - modalW) / 2);
-            const modalTop = Math.round((p.height - modalH) / 2);
+            const modalTop = Math.max(18, Math.round((p.height - modalH) / 2));
             return { modalW, modalH, modalLeft, modalTop };
         }
 
         getSettingsPanelLayout() {
             const { modalW, modalH, modalLeft, modalTop } = this.getSettingsModalMetrics();
-            const rowX = modalLeft + 28;
-            const rowW = modalW - 56;
-            const rowH = 54;
+            const rowX = modalLeft + 48;
+            const rowW = modalW - 96;
+            const rowH = 50;
             const rowGap = 14;
-            const headerH = 62;
-            const firstRowY = modalTop + headerH + 18;
-            const controlRight = modalLeft + modalW - 36;
-            const btnSize = 30;
+            const titleY = modalTop + 68;
+            const firstRowY = modalTop + 170;
+            const controlRight = modalLeft + modalW - 56;
+            const btnSize = 18;
             const btnGap = 10;
-            const valueBoxW = 132;
+            const valueBoxW = 138;
 
             const rows = [
-                {
-                    key: "music",
-                    label: p.t("menu.music"),
-                    value: `${Math.round(p.variables.gameMusic.volume * 10)}`,
-                    valueW: valueBoxW,
-                    minusBtn: "musMinus",
-                    plusBtn: "musPlus",
-                    accent: [255, 170, 230]
-                },
                 {
                     key: "sounds",
                     label: p.t("menu.sounds"),
@@ -3599,16 +3607,18 @@
                     valueW: valueBoxW,
                     minusBtn: "volMinus",
                     plusBtn: "volPlus",
-                    accent: [255, 210, 120]
+                    icon: p.variables.settingsIcons?.sounds,
+                    placeholder: "S"
                 },
                 {
-                    key: "graphics",
-                    label: p.t("menu.graphics"),
-                    value: this.getGraphicsQualityLabel(),
+                    key: "music",
+                    label: p.t("menu.music"),
+                    value: `${Math.round(p.variables.gameMusic.volume * 10)}`,
                     valueW: valueBoxW,
-                    minusBtn: "gfxMinus",
-                    plusBtn: "gfxPlus",
-                    accent: [140, 210, 255]
+                    minusBtn: "musMinus",
+                    plusBtn: "musPlus",
+                    icon: p.variables.settingsIcons?.music,
+                    placeholder: "M"
                 },
                 {
                     key: "language",
@@ -3617,7 +3627,18 @@
                     valueW: valueBoxW,
                     minusBtn: "langMinus",
                     plusBtn: "langPlus",
-                    accent: [170, 245, 190]
+                    icon: p.variables.settingsIcons?.language,
+                    placeholder: "L"
+                },
+                {
+                    key: "graphics",
+                    label: p.t("menu.graphics"),
+                    value: this.getGraphicsQualityLabel(),
+                    valueW: valueBoxW,
+                    minusBtn: "gfxMinus",
+                    plusBtn: "gfxPlus",
+                    icon: p.variables.settingsIcons?.graphics,
+                    placeholder: "G"
                 },
                 {
                     key: "attack_readiness_bar",
@@ -3626,7 +3647,8 @@
                     valueW: valueBoxW,
                     minusBtn: "readinessMinus",
                     plusBtn: "readinessPlus",
-                    accent: [130, 255, 205]
+                    icon: p.variables.settingsIcons?.attack_readiness_bar,
+                    placeholder: "A"
                 }
             ].map((row, index) => {
                 const y = firstRowY + index * (rowH + rowGap);
@@ -3646,17 +3668,21 @@
                 };
             });
 
-            const closeBtn = p.buttonsArr.find(b => b.name === "close");
-            const closeX = modalLeft + Math.round((modalW - (closeBtn?.w || 100)) / 2);
-            const closeY = modalTop + modalH - 52;
+            const closeW = 150;
+            const closeH = 52;
+            const closeX = modalLeft + Math.round((modalW - closeW) / 2);
+            const closeY = modalTop + modalH - closeH - 16;
 
             return {
                 modalW,
                 modalH,
                 modalLeft,
                 modalTop,
-                headerH,
+                titleY,
+                btnSize,
                 rows,
+                closeW,
+                closeH,
                 closeX,
                 closeY
             };
@@ -3665,51 +3691,57 @@
         bottomPanel(){
             if(p.gameStarted)
             {
-                p.push()
-                    p.translate(0,0,2)
-                    p.textSize(20)
-                    p.push();
-                        p.text(this.formatElapsedTime(p.menu.time), -p.width/2 + 65,p.height/2 - 13);
-                        p.noStroke();
-                        p.texture( p.variables.clockImg);
-                        p.rect(-p.width/2 + 15,p.height/2 - 35, 28 , 30);
-                    p.pop();
+                p.push();
+                    p.translate(-p.width / 2, -p.height / 2, 2);
+                    p.imageMode(p.CORNER);
+                    p.noStroke();
 
-                    p.push();
-                        p.noStroke();
-                        p.texture( p.variables.scoreTexture);
-                        p.rect(-p.width/2 + 115,p.height/2 - 35, 28 , 30);
-                        p.text(p.variables.score, -p.width/2 + 165,p.height/2 - 13);
-
-                    p.pop();
-
+                    const cardW = 140;
+                    const cardH = 50;
+                    const gap = 12;
+                    const startX = 16;
+                    const y = p.height - cardH -6;
                    
-                    if (p.game) {
-                        p.push();
-                            p.textAlign(p.RIGHT);
-                            p.fill('#fff');
-                            const baseX = p.width/4 ;
-                            const y = p.height/2 - 13;
-                            const waveX = baseX - 340;
-                            p.textSize(20);
-                            const targetWaves = p.game.mainCampaignWaves || 0;
-                            const waveLabel = (!p.game.endlessMode && targetWaves > 0)
-                                ? p.t("hud.wave_full", { wave: p.game.wave, total: targetWaves })
-                                : p.t("hud.wave_short", { wave: p.game.wave });
-                            p.text(waveLabel, waveX, y);
+                    const labelFont = p.variables.textFontFontick || undefined;
+                    const targetWaves = p.game?.mainCampaignWaves || 0;
+                    const waveLabel = (!p.game?.endlessMode && targetWaves > 0)
+                        ? `${p.game?.wave ?? 0}/${targetWaves}`
+                        : `${p.game?.wave ?? 0}`;
+                    const iconSize = 28;
+                    const iconX = 12;
+                    const iconOffsetY = Math.round((cardH - iconSize) / 2);
+                    const valueStartX = 38;
+                    const valueCenterY = y + cardH / 2 -4;
+                    const cards = [
+                        { icon: p.variables.clockImg, value: this.formatElapsedTime(p.menu.time) },
+                        { icon: p.variables.scoreTexture, value: `${p.variables.score}` },
+                        { icon: p.variables.waveTexture, value: waveLabel }
+                    ];
 
-                            if (p.game.perfMonitorEnabled) {
-                                const fpsLabel = `FPS ${p.game.perfStats.fps.toFixed(1)}`;
-                                p.textAlign(p.LEFT);
-                                p.textSize(14);
-                                p.fill(220, 235, 255);
-                                p.text(fpsLabel, waveX + 98, y - 1);
-                            }
-                        
-                        p.pop();
+                    cards.forEach((card, index) => {
+                        const x = startX + index * (cardW + gap);
+
+                        if (p.variables.bottomHudTexture) {
+                            p.image(p.variables.bottomHudTexture, x, y, cardW, cardH);
+                        }
+                        if (card.icon) {
+                            p.image(card.icon, x + iconX, y + iconOffsetY, iconSize, iconSize);
+                        }
+
+                        if (labelFont) p.textFont(labelFont);
+                        p.fill('#FFEBCF');
+                        p.textAlign(p.CENTER, p.CENTER);
+                        p.textSize(index === 1 ? 22 : 20);
+                        p.text(card.value, x + valueStartX + (cardW - valueStartX) / 2, valueCenterY);
+                    });
+
+                    if (p.game?.perfMonitorEnabled) {
+                        const fpsLabel = `FPS ${p.game.perfStats.fps.toFixed(1)}`;
+                        p.fill(220, 235, 255);
+                        p.textAlign(p.LEFT, p.CENTER);
+                        p.textSize(14);
+                        p.text(fpsLabel, startX, y - 10);
                     }
-
-                 
                 p.pop();
             }
             if (p.gameStarted) {
@@ -4107,7 +4139,7 @@
             if(!this.settingModal)
               return
             this.updateSettingsButtonsLayout();
-            const { modalW, modalH, modalLeft, modalTop, headerH, rows } = this.getSettingsPanelLayout();
+            const { modalW, modalH, modalLeft, modalTop, titleY, rows } = this.getSettingsPanelLayout();
             const modalX = -p.width / 2 + modalLeft;
             const modalY = -p.height / 2 + modalTop;
             p.push();
@@ -4128,17 +4160,14 @@
             p.push();
                 p.translate(0, 0, 30);
                 p.noStroke();
-                p.fill(18, 12, 40, 228);
-                p.rect(modalX, modalY , modalW , modalH, 24);
-
-                p.stroke(255, 255, 255, 28);
-                p.strokeWeight(1.6);
-                p.noFill();
-                p.rect(modalX + 1, modalY + 1, modalW - 2, modalH - 2, 24);
-
-                p.noStroke();
-                p.fill(208, 122, 236, 235);
-                p.rect(modalX + 14, modalY + 14, modalW - 28, headerH, 20);
+                if (p.variables.settingsTexture) {
+                    p.tint(255, 255);
+                    p.texture(p.variables.settingsTexture);
+                    p.rect(modalX, modalY , modalW , modalH, 24);
+                } else {
+                    p.fill(18, 12, 40, 228);
+                    p.rect(modalX, modalY , modalW , modalH, 24);
+                }
             p.pop();
 
 
@@ -4147,43 +4176,120 @@
                 p.translate(0,0,31)
                 p.textFont(p.variables.textFontFontick)
                 p.textAlign(p.CENTER, p.CENTER)
-                p.textSize(26)
-                p.text(p.t("menu.settings"), modalX + modalW / 2, modalY + 14 + headerH / 2 + 2)
+                p.textSize(40)
+                p.text(p.t("menu.settings"), 0, -p.height / 2 + titleY + 25)
 
                 rows.forEach((row) => {
                     const rx = -p.width / 2 + row.x;
                     const ry = -p.height / 2 + row.y;
                     const valueX = -p.width / 2 + row.valueX;
+                    const placeholderX = rx + 18;
+                    const placeholderY = ry + 10;
+                    const placeholderW = 36;
+                    const placeholderH = row.h - 20;
 
                     p.noStroke();
-                    p.fill(33, 22, 67, 215);
-                    p.rect(rx, ry, row.w, row.h, 18);
+                    p.fill(72, 42, 24, 150);
+                    p.rect(rx, ry + 4, row.w, row.h, 12);
 
-                    p.fill(...row.accent, 42);
-                    p.rect(rx + 10, ry + 10, 8, row.h - 20, 6);
+                    p.fill(116, 73, 43, 236);
+                    p.rect(rx, ry, row.w, row.h, 12);
 
-                    p.fill(244, 245, 255);
+                    p.stroke(66, 39, 23, 190);
+                    p.strokeWeight(1.2);
+                    p.noFill();
+                    p.rect(rx + 0.5, ry + 0.5, row.w - 1, row.h - 1, 12);
+
+                    p.noStroke();
+                    p.fill(245, 222, 188, 245);
+                    p.rect(placeholderX, placeholderY, placeholderW, placeholderH, 10);
+
+                    if (row.icon) {
+                        p.imageMode(p.CORNER);
+                        p.tint(120, 76, 48, 255);
+                        p.image(row.icon, placeholderX + 7, placeholderY + 6, placeholderW - 14, placeholderH - 12);
+                        p.noTint();
+                    } else {
+                        p.fill(120, 76, 48, 235);
+                        p.textAlign(p.CENTER, p.CENTER);
+                        p.textSize(12);
+                        p.text(row.placeholder, placeholderX + placeholderW / 2, ry + row.h / 2 + 1);
+                    }
+
+                    p.fill(255, 239, 213);
                     p.textAlign(p.LEFT, p.CENTER);
-                    p.textSize(17);
-                    p.text(row.label, rx + 28, ry + row.h / 2 + 1);
+                    p.textSize(row.key === "attack_readiness_bar" ? 15 : 18);
+                    p.text(row.label, rx + 68, ry + row.h / 2 + 1);
 
-                    p.fill(14, 10, 31, 230);
-                    p.stroke(...row.accent, 90);
+                    p.fill(31, 17, 24, 235);
+                    p.stroke(246, 219, 178, 80);
                     p.strokeWeight(1.2);
                     p.rect(valueX, ry + 9, row.valueW, row.h - 18, 12);
 
                     p.noStroke();
-                    p.fill(255, 255, 255);
+                    p.fill(255, 242, 222);
                     p.textAlign(p.CENTER, p.CENTER);
-                    p.textSize(row.key === "graphics" ? 14 : 18);
+                    p.textSize(row.key === "graphics" ? 15 : 20);
                     p.text(row.value, valueX + row.valueW / 2, ry + row.h / 2 + 1);
                 });
             p.pop();
             p.drawButtons('sets');
    
         }
+
+        handleSettingsModalClick(x, y) {
+            if (!this.settingModal) return false;
+
+            this.updateSettingsButtonsLayout();
+            const { rows, closeX, closeY, closeW, closeH, btnSize } = this.getSettingsPanelLayout();
+            const hitPadding = 16;
+            const closeRect = { x: closeX, y: closeY, w: closeW, h: closeH };
+            if (this.pointInRect(x, y, closeRect)) {
+                const closeBtn = p.buttonsArr.find(b => b.name === "close");
+                if (closeBtn) {
+                    closeBtn.click();
+                } else {
+                    this.settingModal = false;
+                }
+                return true;
+            }
+
+            for (const row of rows) {
+                const minusRect = {
+                    x: row.minusX - hitPadding,
+                    y: row.controlY - hitPadding,
+                    w: btnSize + hitPadding * 2,
+                    h: btnSize + hitPadding * 2
+                };
+                const plusRect = {
+                    x: row.plusX - hitPadding,
+                    y: row.controlY - hitPadding,
+                    w: btnSize + hitPadding * 2,
+                    h: btnSize + hitPadding * 2
+                };
+
+                if (this.pointInRect(x, y, minusRect)) {
+                    const minusBtn = p.buttonsArr.find(b => b.name === row.minusBtn);
+                    if (minusBtn) {
+                        minusBtn.click();
+                    }
+                    return true;
+                }
+
+                if (this.pointInRect(x, y, plusRect)) {
+                    const plusBtn = p.buttonsArr.find(b => b.name === row.plusBtn);
+                    if (plusBtn) {
+                        plusBtn.click();
+                    }
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         updateSettingsButtonsLayout(){
-            const { rows, closeX, closeY } = this.getSettingsPanelLayout();
+            const { rows, closeX, closeY, closeW, closeH, btnSize } = this.getSettingsPanelLayout();
 
             const setPos = (name, x, y) => {
                 const btn = p.buttonsArr.find(b => b.name === name);
@@ -4194,9 +4300,24 @@
 
             const closeBtn = p.buttonsArr.find(b => b.name === "close");
             if (closeBtn) {
+                closeBtn.w = closeW;
+                closeBtn.h = closeH;
+                closeBtn.textSize = 24;
+                closeBtn.texture = p.variables.buttTextureStart;
+                closeBtn.textureHov = p.variables.buttTextureStartHov;
                 setPos("close", closeX, closeY);
             }
             rows.forEach((row) => {
+                const minusBtn = p.buttonsArr.find(b => b.name === row.minusBtn);
+                const plusBtn = p.buttonsArr.find(b => b.name === row.plusBtn);
+                if (minusBtn) {
+                    minusBtn.w = btnSize;
+                    minusBtn.h = btnSize;
+                }
+                if (plusBtn) {
+                    plusBtn.w = btnSize;
+                    plusBtn.h = btnSize;
+                }
                 setPos(row.minusBtn, row.minusX, row.controlY);
                 setPos(row.plusBtn, row.plusX, row.controlY);
             });
@@ -9324,11 +9445,10 @@
             })();
             const waveBtnW = bottomButtonLayout.cardW;
             const waveBtnH = 50;
-            console.log(waveBtnW, waveBtnH)
             const speedBtnH = 30;
-            const speedAreaY = p.height - speedBtnH - 16;
+            const waveBtnY = p.height - waveBtnH - 30;
+            const speedAreaY = waveBtnY - speedBtnH - 12;
             const waveBtnX = bottomButtonLayout.leftX;
-            const waveBtnY = speedAreaY - waveBtnH - 12;
 
             this.waveButton = new Buttons(
                     'startWave',
@@ -9464,8 +9584,6 @@
         getWaveButtonPanelPos() {
             const panelX = FIELD_WIDTH + 8;
             const btnH = this.waveButton?.h ?? 50;
-            const speedBtnH = 30;
-            const speedAreaY = p.height - speedBtnH - 16;
             const panelW = p.width - panelX - 8;
             const panelPad = 10;
             const gap = 10;
@@ -9474,7 +9592,7 @@
             const cardW = Math.floor((panelW - panelPad * 2 - gap) / cols);
             const leftX = panelX + panelPad;
             const rightX = leftX + cardW + gap;
-            const y = speedAreaY - btnH - 12;
+            const y = p.height - btnH - 30;
             return {
                 x: leftX,
                 y,
@@ -9499,7 +9617,9 @@
             const speeds = [0.5, 1, 2, 3];
             const totalSpeedW = btnW * speeds.length + speedGap * (speeds.length - 1);
             const baseX = FIELD_WIDTH + Math.floor((UI_WIDTH - totalSpeedW) / 2);
-            const baseY = p.height - btnH - 16;
+            const waveBtnH = this.waveButton?.h ?? 50;
+            const waveBtnY = p.height - waveBtnH - 30;
+            const baseY = waveBtnY - btnH - 12;
             return { btnW, btnH, speedGap, totalSpeedW, baseX, baseY, speeds };
         }
 
@@ -13287,6 +13407,31 @@
             return Math.max(0, Math.round(baseCost * mult));
         }
 
+        isRareTowerType(id) {
+            return ["slow", "burn", "pulse", "support"].includes(id);
+        }
+
+        getTowerCardBackgroundId(key, affordable = true) {
+            const type = p.TOWER_TYPES[key];
+            if (!affordable) return "cantBuy";
+            if (type?.legendary) return "legendary";
+            if (this.isRareTowerType(type?.id)) return "rare";
+            return "default";
+        }
+
+        getTowerCardBackgroundTexture(backgroundId) {
+            switch (backgroundId) {
+                case "legendary":
+                    return p.variables.backLegendaryTexture;
+                case "rare":
+                    return p.variables.backRareTexture;
+                case "cantBuy":
+                    return p.variables.backCantBuyTexture;
+                default:
+                    return p.variables.backDefaultTexture;
+            }
+        }
+
         getUiGraphicsDensity() {
             const scaleX = Math.max(0.1, p.uiScaleX || 1);
             const scaleY = Math.max(0.1, p.uiScaleY || 1);
@@ -13367,64 +13512,37 @@
             this._towerDamagePanelNextRefresh = 0;
         }
 
-        getTowerCardBase(key, cardW, cardH) {
+        getTowerCardBase(key, cardW, cardH, affordable = true) {
             const sizeKey = `${cardW}x${cardH}`;
             if (this._towerCardCacheSize !== sizeKey) {
                 this._towerCardCache = new Map();
                 this._towerCardCacheSize = sizeKey;
             }
 
-            const cached = this._towerCardCache.get(key);
+            const backgroundId = this.getTowerCardBackgroundId(key, affordable);
+            const cacheKey = `${key}:${backgroundId}`;
+            const cached = this._towerCardCache.get(cacheKey);
             if (cached) return cached;
 
             const t = p.TOWER_TYPES[key];
             const gfx = this.createUiGraphics(cardW, cardH);
-            gfx.textFont(p.variables.textFontFontick);
-            gfx.noStroke();
-            gfx.fill(36, 46, 60, 230);
-            gfx.rect(0, 0, cardW, cardH, 10);
-
-            if (t.legendary) {
+            const backgroundTexture = this.getTowerCardBackgroundTexture(backgroundId);
+            if (backgroundTexture) {
+                gfx.imageMode(gfx.CORNER);
+                gfx.image(backgroundTexture, 0, 0, cardW, cardH);
+            } else {
                 gfx.noStroke();
-                gfx.fill(255, 194, 92, 24);
-                gfx.rect(4, 4, cardW - 8, cardH - 8, 9);
-                gfx.fill(255, 230, 165, 14);
-                gfx.rect(8, 8, cardW - 16, cardH - 16, 8);
-
-                gfx.fill(255, 214, 115, 22);
-                gfx.quad(10, 12, cardW - 28, 12, cardW - 52, 28, 28, 28);
-
-                gfx.noFill();
-                gfx.stroke(255, 170, 70, 55);
-                gfx.strokeWeight(7);
-                gfx.rect(4, 4, cardW - 8, cardH - 8, 9);
-
-                gfx.stroke(255, 216, 132, 220);
-                gfx.strokeWeight(2.2);
-                gfx.rect(2, 2, cardW - 4, cardH - 4, 8);
-
-                gfx.stroke(255, 244, 214, 95);
-                gfx.strokeWeight(1);
-                gfx.rect(6, 6, cardW - 12, cardH - 12, 7);
-
+                gfx.fill(36, 46, 60, 230);
+                gfx.rect(0, 0, cardW, cardH, 10);
             }
 
             const iconSize = Math.min(cardW - 24, 48);
             const iconX = (cardW - iconSize) / 2;
             const iconY = 20;
-            gfx.noStroke();
-            if (t.legendary) {
-                gfx.fill(255, 183, 72, 32);
-                gfx.rect(iconX - 7, iconY - 7, iconSize + 14, iconSize + 14, 12);
-                gfx.fill(255, 228, 172, 22);
-                gfx.rect(iconX - 4, iconY - 4, iconSize + 8, iconSize + 8, 10);
-            }
-            gfx.fill(24, 30, 40, 220);
-            gfx.rect(iconX - 3, iconY - 3, iconSize + 6, iconSize + 6, 8);
             gfx.imageMode(gfx.CORNER);
             gfx.image(t.texture[0], iconX, iconY, iconSize, iconSize);
 
-            this._towerCardCache.set(key, gfx);
+            this._towerCardCache.set(cacheKey, gfx);
             return gfx;
         }
 
@@ -13647,8 +13765,10 @@
                     const t = p.TOWER_TYPES[item.key];
                     const blockedLegendary = t.legendary && hasLegendary;
                     const count = towerCounts.get(item.key) || 0;
+                    const limit = this.getTowerTypeLimit(item.key);
+                    const blockedByLimit = this.hasTowerTypeHardLimit(item.key) && count >= limit;
                     const buildCost = this.getTowerBuildCost(item.key, count);
-                    affordableParts.push(this.money >= buildCost && !blockedLegendary ? "1" : "0");
+                    affordableParts.push(this.money >= buildCost && !blockedLegendary && !blockedByLimit ? "1" : "0");
                     countParts.push(`${towerCounts.get(item.key) || 0}`);
                 }
                 affordableSig = affordableParts.join("");
@@ -13689,10 +13809,14 @@
                 const g = this._towerPanelGfx;
                 g.clear();
                 g.push();
-                    g.stroke(90, 115, 145, 220);
-                    g.strokeWeight(2);
-                    g.fill(20, 26, 34, 220);
-                    g.rect(0, 0, panelW, panelH, 12);
+                    if (p.variables.rightMenuTexture) {
+                        g.image(p.variables.rightMenuTexture, 0, 0, panelW, panelH);
+                    } else {
+                        g.stroke(90, 115, 145, 220);
+                        g.strokeWeight(2);
+                        g.fill(20, 26, 34, 220);
+                        g.rect(0, 0, panelW, panelH, 12);
+                    }
                 g.pop();
 
                 g.push();
@@ -13702,13 +13826,11 @@
 
                     if (this._towerPanelLayout) {
                         const accentIds = new Set(["slow", "burn", "pulse", "support"]);
-                        const accentStroke = [90, 170, 255];
+                        const accentStroke = [127, 227, 107];
+                        const defaultStroke = [179, 155, 111];
                         for (const item of this._towerPanelLayout) {
                             const key = item.key;
                             const t = p.TOWER_TYPES[key];
-                            const baseCard = this.getTowerCardBase(key, cardW, cardH);
-                            g.image(baseCard, item.x, item.y);
-
                             const blockedLegendary = t.legendary && hasLegendary;
                             const count = towerCounts.get(key) || 0;
                             const limit = this.getTowerTypeLimit(key);
@@ -13716,6 +13838,8 @@
                             const buildCost = this.getTowerBuildCost(key, count);
                             const affordable = this.money >= buildCost && !blockedLegendary && !blockedByLimit;
                             const selected = this.selectedTowerType === key;
+                            const baseCard = this.getTowerCardBase(key, cardW, cardH, affordable);
+                            g.image(baseCard, item.x, item.y);
 
                             g.textAlign(g.RIGHT, g.CENTER);
                             g.textSize(13);
@@ -13731,31 +13855,10 @@
                             } else if (accentIds.has(key)) {
                                 g.stroke(...accentStroke);
                             } else {
-                                g.stroke(80, 100, 125);
+                                g.stroke(...defaultStroke);
                             }
                             g.noFill();
                             g.rect(item.x, item.y, cardW, cardH, 10);
-
-                            g.noStroke();
-                            const rowY = item.y + cardH - 11;
-                            if (!blockedByLimit && p.icons.gold) {
-                                const costMultiplier = this.getTowerBuildCostMultiplier(key, count);
-                                const showCostMultiplier =
-                                    !this.hasTowerTypeHardLimit(key) &&
-                                    count >= this.getTowerSoftCap(key) &&
-                                    costMultiplier > 1;
-                                const costText = showCostMultiplier
-                                    ? `${buildCost} (x${costMultiplier})`
-                                    : `${buildCost}`;
-                                const costWidth = g.textWidth(costText);
-                                const costY = rowY;
-                                const costRightX = item.x + cardW - 8;
-                                const goldSize = 12;
-                                const goldGap = 4;
-                                const goldX = costRightX - costWidth - goldGap - goldSize;
-                                const goldY = costY - goldSize / 2;
-                                g.image(p.icons.gold, goldX, goldY, goldSize, goldSize);
-                            }
 
                         }
                     }
@@ -13894,6 +13997,21 @@
                                     : `${buildCost}`;
                                 const costY = rowY;
                                 const costRightX = item.x + cardW - 8;
+                                if (p.icons.gold) {
+                                    const goldSize = 20;
+                                    const goldGap = 4;
+                                    const goldAspect =
+                                        Number.isFinite(p.icons.gold.width) &&
+                                        Number.isFinite(p.icons.gold.height) &&
+                                        p.icons.gold.height > 0
+                                            ? p.icons.gold.width / p.icons.gold.height
+                                            : 1;
+                                    const goldW = Math.max(12, Math.round(goldSize * goldAspect));
+                                    const costWidth = gText.textWidth(costText);
+                                    const goldX = costRightX - costWidth - goldGap - goldW;
+                                    const goldY = costY - goldSize / 2;
+                                    gText.image(p.icons.gold, goldX, goldY, goldW, goldSize);
+                                }
                                 gText.text(costText, costRightX, costY);
                             }
                         }
@@ -13927,6 +14045,7 @@
                     const buildCost = this.getTowerBuildCost(hoverItem.key, count);
                     const affordable = this.money >= buildCost && !blockedLegendary && !blockedByLimit;
                     const selected = this.selectedTowerType === hoverItem.key;
+                    const isRare = ["slow", "burn", "pulse", "support"].includes(hoverItem.key);
 
                     p.noFill();
                     p.strokeWeight(2);
@@ -13934,8 +14053,12 @@
                         p.stroke(255, 85, 85);
                     } else if (selected) {
                         p.stroke(70, 220, 120);
+                    } else if (hoverType?.legendary) {
+                        p.stroke(255, 205, 120);
+                    } else if (isRare) {
+                        p.stroke(127, 227, 107);
                     } else {
-                        p.stroke(190, 210, 235);
+                        p.stroke(179, 155, 111);
                     }
                     p.rect(panelX + hoverItem.x, panelY + hoverItem.y, hoverItem.w, hoverItem.h, 10);
                 }
@@ -13950,7 +14073,7 @@
                 p.fill(255, 220, 120);
                 p.text(goldText, panelX + panelW - panelPad, goldY);
                 if (p.goldTexture) {
-                    const goldSize = 20;
+                    const goldSize = 30;
                     const goldX = panelX + panelW - panelPad - p.textWidth(goldText) - goldSize - 6;
                     p.image(p.goldTexture, goldX, goldY + 2 - goldSize / 2, goldSize, goldSize);
                 }
@@ -14654,6 +14777,10 @@
                 iconSize
             } = panel;
             const alpha = (value) => Math.max(0, Math.min(255, Math.round(value * alphaScale)));
+            const titleBandX = ox + 8;
+            const titleBandY = oy + 6;
+            const titleBandW = w - 16;
+            const titleBandH = Math.max(20, headH - 6);
 
             ctx.push?.();
             if (ctx.textFont) {
@@ -14663,43 +14790,37 @@
                 ctx.imageMode(p.CORNER);
             }
 
-            ctx.stroke(255, 255, 255, alpha(35));
-            ctx.strokeWeight(1);
-            ctx.fill(16, 22, 34, alpha(238));
-            ctx.rect(ox, oy, w, h, 10);
-
-            ctx.noStroke();
-            ctx.fill(60, 110, 180, alpha(130));
-            ctx.rect(ox, oy, w, headH, 10, 10, 0, 0);
+            this.drawTowerPopupBackground(ctx, ox, oy, w, h, alpha(255));
+            this.drawTowerPopupLine(ctx, titleBandX, titleBandY, titleBandW, titleBandH, alpha(255));
 
             ctx.fill(255, 255, 255, alpha(255));
             ctx.textAlign(p.LEFT, p.CENTER);
             ctx.textSize(13);
-            ctx.text(towerTitle, ox + pad, oy + headH / 2 + 1);
+            ctx.text(towerTitle, ox + pad + 2, titleBandY + titleBandH / 2 + 1);
 
             ctx.textAlign(p.RIGHT, p.CENTER);
             ctx.textSize(11);
             ctx.fill(levelLabelTint[0], levelLabelTint[1], levelLabelTint[2], alpha(255));
-            ctx.text(levelLabel, ox + w - pad, oy + headH / 2 + 1);
+            ctx.text(levelLabel, ox + w - pad - 2, titleBandY + titleBandH / 2 + 1);
 
             lines.forEach((line, i) => {
                 const rowY = oy + headH + pad + i * rowH;
                 const tone = line.tone || [180, 180, 180];
+                const bandX = ox + 8;
+                const bandY = rowY - 1;
+                const bandW = w - 16;
+                const bandH = rowH - 2;
 
-                ctx.noStroke();
-                ctx.fill(tone[0], tone[1], tone[2], alpha(42));
-                ctx.rect(ox + 6, rowY - 2, w - 12, rowH - 2, 6);
+                this.drawTowerPopupLine(ctx, bandX, bandY, bandW, bandH, alpha(245), tone);
 
                 if (line.icon) {
-                    ctx.tint?.(255, alpha(255));
-                    ctx.image(line.icon, ox + pad, rowY, iconSize, iconSize);
-                    ctx.noTint?.();
+                    this.drawTowerPopupImage(ctx, line.icon, ox + pad + 2, rowY, iconSize, iconSize, alpha(255));
                 }
 
                 ctx.fill(245, 248, 255, alpha(255));
                 ctx.textAlign(p.LEFT, p.CENTER);
                 ctx.textSize(13);
-                const textX = ox + pad + iconSize + 8;
+                const textX = ox + pad + iconSize + 10;
                 const textY = rowY + iconSize / 2;
                 if (Array.isArray(line.segments) && line.segments.length > 0) {
                     let cursorX = textX;
@@ -14715,6 +14836,56 @@
                 }
             });
             ctx.pop?.();
+        }
+
+        drawTowerPopupBackground(ctx, x, y, w, h, alphaValue = 255) {
+            const texture = p.variables?.backPopupTexture;
+            ctx.noStroke?.();
+            const drewTexture = texture
+                ? this.drawTowerPopupImage(ctx, texture, x, y, w, h, alphaValue)
+                : false;
+            if (!drewTexture) {
+                ctx.fill?.(16, 22, 34, alphaValue * 0.93);
+                ctx.rect?.(x, y, w, h, 10);
+            }
+
+            ctx.noFill?.();
+            ctx.stroke?.(255, 246, 220, Math.min(255, alphaValue * 0.3));
+            ctx.strokeWeight?.(1);
+            ctx.rect?.(x, y, w, h, 10);
+        }
+
+        drawTowerPopupLine(ctx, x, y, w, h, alphaValue = 255, tone = null) {
+            const texture = p.variables?.linePopupTexture;
+            ctx.noStroke?.();
+            const drewTexture = texture
+                ? this.drawTowerPopupImage(ctx, texture, x, y, w, h, alphaValue)
+                : false;
+            if (!drewTexture) {
+                ctx.fill?.(82, 68, 56, alphaValue);
+                ctx.rect?.(x, y, w, h, 8);
+            }
+
+            if (tone) {
+                ctx.noStroke?.();
+                ctx.fill?.(tone[0], tone[1], tone[2], Math.min(255, alphaValue * 0.16));
+                ctx.rect?.(x, y, w, h, 8);
+            }
+        }
+
+        drawTowerPopupImage(ctx, image, x, y, w, h, alphaValue = 255) {
+            if (!ctx?.image || !image) return false;
+
+            const hasSize = Number.isFinite(image.width) && Number.isFinite(image.height) && image.width > 0 && image.height > 0;
+            if (!hasSize) return false;
+
+            ctx.push?.();
+            if (ctx.tint) {
+                ctx.tint(255, alphaValue);
+            }
+            ctx.image(image, x, y, w, h);
+            ctx.pop?.();
+            return true;
         }
 
         buildTowerStatsPanelGfx(tower) {
@@ -15118,6 +15289,10 @@
 
         renderBuildTooltipPanel(ctx, panel, ox = 0, oy = 0) {
             const { title, lines, w, h, headH, rowH, pad, iconSize } = panel;
+            const titleBandX = ox + 8;
+            const titleBandY = oy + 6;
+            const titleBandW = w - 16;
+            const titleBandH = Math.max(20, headH - 6);
 
             ctx.push?.();
             if (ctx.textFont) {
@@ -15127,30 +15302,26 @@
                 ctx.imageMode(p.CORNER);
             }
 
-            ctx.stroke(255, 255, 255, 35);
-            ctx.strokeWeight(1);
-            ctx.fill(16, 22, 34, 238);
-            ctx.rect(ox, oy, w, h, 10);
-
-            ctx.noStroke();
-            ctx.fill(58, 108, 176, 130);
-            ctx.rect(ox, oy, w, headH, 10, 10, 0, 0);
+            this.drawTowerPopupBackground(ctx, ox, oy, w, h, 255);
+            this.drawTowerPopupLine(ctx, titleBandX, titleBandY, titleBandW, titleBandH, 255);
 
             ctx.fill(255);
             ctx.textAlign(p.LEFT, p.CENTER);
             ctx.textSize(13);
-            ctx.text(title, ox + pad, oy + headH / 2 + 1);
+            ctx.text(title, ox + pad + 2, titleBandY + titleBandH / 2 + 1);
 
             lines.forEach((line, i) => {
                 const rowY = oy + headH + pad + i * rowH;
                 const tone = line.tone || [180, 180, 180];
+                const bandX = ox + 8;
+                const bandY = rowY - 1;
+                const bandW = w - 16;
+                const bandH = rowH - 2;
 
-                ctx.noStroke();
-                ctx.fill(tone[0], tone[1], tone[2], 42);
-                ctx.rect(ox + 6, rowY - 2, w - 12, rowH - 2, 6);
+                this.drawTowerPopupLine(ctx, bandX, bandY, bandW, bandH, 245, tone);
 
                 if (line.icon) {
-                    ctx.image(line.icon, ox + pad, rowY, iconSize, iconSize);
+                    this.drawTowerPopupImage(ctx, line.icon, ox + pad + 2, rowY, iconSize, iconSize, 255);
                 }
 
                 ctx.fill(240);
@@ -15158,7 +15329,7 @@
                 ctx.textSize(13);
                 ctx.text(
                     line.text,
-                    ox + pad + iconSize + 8,
+                    ox + pad + iconSize + 10,
                     rowY + iconSize / 2
                 );
             });
@@ -15710,6 +15881,26 @@
             if (this.handleTowerDamagePanelClick(x, y)) return true;
             if (x < FIELD_WIDTH) return false;
 
+            // Bottom-right controls should win over tower cards if their areas intersect.
+            if (this.areSpeedButtonsVisible()) {
+                const { btnW, btnH, speedGap, baseX, baseY, speeds } = this.getSpeedButtonsLayout();
+
+                for (let i = 0; i < speeds.length; i++) {
+                    const bx = baseX + i * (btnW + speedGap);
+                    const by = baseY;
+
+                    if (
+                        x > bx &&
+                        x < bx + btnW &&
+                        y > by &&
+                        y < by + btnH
+                    ) {
+                        p.gameSpeed = speeds[i];
+                        return true;
+                    }
+                }
+            }
+
             const panelX = FIELD_WIDTH + 8;
             const panelY = 8;
             const panelW = p.width - panelX - 8;
@@ -15754,27 +15945,6 @@
                         this.selectedTowerType = key;
                         this.buildMode = null;
                     }
-                    return true;
-                }
-            }
-
-            // ================= SPEED BUTTONS =================
-            if (!this.areSpeedButtonsVisible()) {
-                return false;
-            }
-            const { btnW, btnH, speedGap, baseX, baseY, speeds } = this.getSpeedButtonsLayout();
-
-            for (let i = 0; i < speeds.length; i++) {
-                const bx = baseX + i * (btnW + speedGap);
-                const by = baseY;
-
-                if (
-                    x > bx &&
-                    x < bx + btnW &&
-                    y > by &&
-                    y < by + btnH
-                ) {
-                    p.gameSpeed = speeds[i];
                     return true;
                 }
             }
