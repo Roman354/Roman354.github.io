@@ -11,7 +11,7 @@
     p.lang = "ru" //
     
     // ТЕСТ Выбор уровня
-    const ENABLE_TEST_START_LEVEL_PICKER = true;
+    p.ENABLE_TEST_START_LEVEL_PICKER = false;
 
     p.I18N = {
         ru: {
@@ -41,6 +41,7 @@
             "button.start": "Старт",
             "button.pause": "Пауза",
             "button.stats": "Урон",
+            "button.towers": "Башни",
             "button.upgrade": "Улучшить",
             "button.sell": "Продать",
             "menu.settings": "Настройки",
@@ -66,12 +67,14 @@
             "hud.wave_short": "Волна: {wave}",
             "game.completed_title": "ИГРА ПРОЙДЕНА",
             "game.endless_unlocked": "Бесконечный режим доступен",
-            "game.congratulations": "ПОЗДРАВЛЯЕМ",
+            "game.congratulations": "Поздравляем",
             "game.completed": "Вы прошли игру",
             "game.lost": "Вы проиграли",
             "game.reward": "НАГРАДА:",
+            "game.summary_title": "Итоги игры",
             "game.summary_score": "Счет",
             "game.summary_time": "Время",
+            "game.summary_exp": "Опыт",
             "game.cleared_waves": "ВЫ ПРОШЛИ {waves} ВОЛН",
             "game.finish_or_continue": "Завершить игру или продолжить?",
             "time.seconds": "{value}с",
@@ -164,6 +167,7 @@
             "button.start": "Start",
             "button.pause": "Pause",
             "button.stats": "Stats",
+            "button.towers": "Towers",
             "button.upgrade": "Upgrade",
             "button.sell": "Sell",
             "menu.settings": "Settings",
@@ -189,12 +193,14 @@
             "hud.wave_short": "Wave: {wave}",
             "game.completed_title": "GAME CLEARED",
             "game.endless_unlocked": "Endless mode unlocked",
-            "game.congratulations": "CONGRATULATIONS",
+            "game.congratulations": "Congratulations",
             "game.completed": "You completed the game",
             "game.lost": "You lost",
             "game.reward": "REWARD:",
+            "game.summary_title": "Game summary",
             "game.summary_score": "Score",
             "game.summary_time": "Time",
+            "game.summary_exp": "Experience",
             "game.cleared_waves": "YOU CLEARED {waves} WAVES",
             "game.finish_or_continue": "Finish the game or continue?",
             "time.seconds": "{value}s",
@@ -447,6 +453,9 @@
         p.variables.gameMusic = new Audio('sounds/gamemusic.mp3'); 
         p.variables.gameMusic.loop = true;
         p.variables.gameLoseMusic = new Audio('sounds/gamelosesound.mp3'); 
+        p.variables.gameWinMusic = new Audio('sounds/gamewin.mp3');
+        p.variables.gameLoseMusic.loop = false;
+        p.variables.gameWinMusic.loop = false;
         p.variables.soundSniperShot = new Audio('sounds/sniper_shot.mp3');
         p.variables.soundBasicShot = new Audio('sounds/bound.wav');
         p.variables.soundBasicShots = [
@@ -2693,12 +2702,12 @@
             Normal: "button.normal",
             Hard: "button.hard",
             close: "button.ok",
-            end: "button.ok",
+            end: "button.finish",
             finish: "button.finish",
             continue: "button.continue",
             startWave: "button.go",
             pause: "button.pause",
-            towerStats: "button.stats"
+            towerStats: p.game?.towerDamagePanelOpen ? "button.towers" : "button.stats"
         };
 
         for (const btn of p.buttonsArr || []) {
@@ -2710,6 +2719,9 @@
 
         if (p.game?.updatePauseButtonLabel) {
             p.game.updatePauseButtonLabel();
+        }
+        if (p.game?.updateTowerStatsButtonLabel) {
+            p.game.updateTowerStatsButtonLabel();
         }
 
         if (p.TOWER_TYPES) {
@@ -2872,6 +2884,15 @@
             // unlockOffset: -1
         }
     };
+
+    p.END_EXPERIENCE_REWARDS = {
+        loseBeforeCampaignEnd: 250,
+        campaignCleared: {
+            easy: 700,
+            normal: 1000,
+            hard: 1400
+        }
+    };
     //ТЕСТ
     p.BUILD_SPECIAL_TILE_TYPES = {
         damage_up: {
@@ -3011,6 +3032,10 @@
             p.game.buildMode = null;
             p.game.upgradeMode = null;
         }
+        console.log(p.keyCode)
+        if (p.keyCode === "81" || p.keyCode === 81) {
+             p.menu.testLevelPickerEnabled = !p.menu.testLevelPickerEnabled ;
+        }
     };
 
     p.mousePressed = function () 
@@ -3045,6 +3070,10 @@
          // Клик в меню настроек
         if (p.menu.settingModal) {
             clicked = p.menu.handleSettingsModalClick?.(p.mouseX, p.mouseY) || clicked;
+        }
+
+        if (!clicked && p.gameEnded && p.game?.towerDamagePanelOpen && p.game.handleTowerDamageMenuClick?.(p.mouseX, p.mouseY)) {
+            return;
         }
 
         if (!clicked && p.game?.handleTowerDamagePanelClick(p.mouseX, p.mouseY)) {
@@ -3084,6 +3113,22 @@
             this.backDefaultTexture = p.loadImage('./img/backDefault.png');
             this.backRareTexture = p.loadImage('./img/backRare.png');
             this.backCantBuyTexture = p.loadImage('./img/backCantBuy.png');
+            this.baseTextures = [
+                p.loadImage('./img/base1.png'),
+                p.loadImage('./img/base2.png'),
+                p.loadImage('./img/base3.png'),
+                p.loadImage('./img/base4.png')
+            ];
+            this.towerPanelLineTexture = p.loadImage('./img/line.png');
+            this.towerLevelTexture = p.loadImage('./img/icons/lvl.png');
+            this.towerLevelUpdateTexture = p.loadImage('./img/icons/lvl_update.png');
+            this.damageExitTexture = p.loadImage('./img/damage_exit.png');
+            this.damageButtonTexture = p.loadImage('./img/damage_button.png');
+            this.damageActiveButtonTexture = p.loadImage('./img/damage_active_button.png');
+            this.damageLineTexture = p.loadImage('./img/damage_line.png');
+            this.damageLastLineTexture = p.loadImage('./img/damage_last_line.png');
+            this.lineInfoTexture = p.loadImage('./img/line_info.png');
+            this.expTexture = p.loadImage('./img/icons/exp.svg');
             this.settingsIcons = {
                 sounds: p.loadImage('./img/icons/sounds.png'),
                 music: p.loadImage('./img/icons/music.png'),
@@ -3109,7 +3154,7 @@
             this.textureWinLose = p.loadImage('./img/winloseback.png');
             this.buttTextureMinus = p.loadImage('./img/minus.png');
             this.settingsTexture = p.loadImage('./img/settingsback.png'); 
-            this.backPopupTexture = p.loadImage('./img/icons/back_popup.png');
+            this.backPopupTexture = p.loadImage('./img/back_popup.png');
             this.linePopupTexture = p.loadImage('./img/icons/line_popup.png');
 
             this.textFontFontick = p.loadFont("fonts/fontick/fontick.otf");
@@ -3118,6 +3163,7 @@
             this.fullscreen = false;
             this.diff = null;
             this.score = 0;
+            this.experienceEarned = 0;
             this.gameMusic;
             this.gameLoseMusic;
             this.soundGameWin;
@@ -3214,7 +3260,7 @@
             this.settingModal = false;
             this.endScoreGoldBonus = 0;
             this.endScoreGoldBonusApplied = false;
-            this.testLevelPickerEnabled = ENABLE_TEST_START_LEVEL_PICKER;
+            this.testLevelPickerEnabled = p.ENABLE_TEST_START_LEVEL_PICKER;
             this.testUnlockAllTowersEnabled = false;
             this.testLevelByDifficulty = {
                 easy: 1,
@@ -3228,6 +3274,7 @@
             };
             // this.intervalTime;
             this.textureBackground = p.loadImage('./img/gameback.png');
+            this.textureStartBackground = p.loadImage('./img/startback.jpg');
             // this.floor = 0;
             this.floorCoord = {x:0, y: p.height -75, w:p.width, h:20};
 
@@ -3244,6 +3291,9 @@
         resetEndScoreConversion() {
             this.endScoreGoldBonus = 0;
             this.endScoreGoldBonusApplied = false;
+            if (p.variables) {
+                p.variables.experienceEarned = 0;
+            }
         }
 
         finalizeEndScore() {
@@ -3389,6 +3439,106 @@
         drawEndScoreGoldBonus(x, y, value, align = "center") {
             this.drawEndScoreGoldBonusBadge(x, y, value, align);
         }
+
+        hasClearedMainCampaign() {
+            const game = p.game;
+            if (!game) return Boolean(p.gameWon || p.gamePassed);
+
+            const targetWaves = game.mainCampaignWaves || 15;
+            return Boolean(
+                p.gameWon ||
+                p.gamePassed ||
+                game.endChoiceShown ||
+                game.waitingEndChoice ||
+                (game.endlessMode && (game.wave || 0) > targetWaves)
+            );
+        }
+
+        getEndExperienceEarned() {
+            const rewards = p.END_EXPERIENCE_REWARDS || {};
+            const cleared = this.hasClearedMainCampaign();
+            const diff = p.game?.difficulty || p.variables.diff || "normal";
+            const value = cleared
+                ? (rewards.campaignCleared?.[diff] ?? rewards.campaignCleared?.normal ?? 1000)
+                : (rewards.loseBeforeCampaignEnd ?? 250);
+
+            if (p.variables) {
+                p.variables.experienceEarned = value;
+            }
+            return value;
+        }
+
+        formatExperienceValue(value) {
+            return `+${Math.max(0, Math.round(Number(value) || 0))}`;
+        }
+
+        drawEndInfoRows(rows, options = {}) {
+            const rowW = options.rowW || 318;
+            const rowH = options.rowH || 42;
+            const startY = options.startY || -32;
+            const rowGap = options.rowGap || 48;
+            const iconX = options.iconX ?? -118;
+            const labelX = options.labelX ?? -90;
+            const valueX = options.valueX ?? 128;
+            const labelSize = options.labelSize || 18;
+            const valueSize = options.valueSize || 20;
+
+            rows.forEach((row, index) => {
+                const rowY = startY + index * rowGap;
+
+                p.push();
+                    p.noStroke();
+                    if (p.variables.lineInfoTexture) {
+                        p.texture(p.variables.lineInfoTexture);
+                        p.rect(0, rowY, rowW, rowH);
+                    } else {
+                        p.fill(92, 50, 25, 235);
+                        p.rect(0, rowY, rowW, rowH, 8);
+                    }
+                p.pop();
+
+                if (row.icon) {
+                    p.push();
+                        p.noStroke();
+                        if (row.iconTint) {
+                            p.tint(row.iconTint[0], row.iconTint[1], row.iconTint[2], 255);
+                        }
+                        p.texture(row.icon);
+                        p.rect(iconX, rowY, 22, 22);
+                        p.noTint();
+                    p.pop();
+                } else if (row.badge) {
+                    p.push();
+                        p.noStroke();
+                        p.fill(row.badgeColor?.[0] ?? 255, row.badgeColor?.[1] ?? 230, row.badgeColor?.[2] ?? 150, 245);
+                        p.textAlign(p.CENTER, p.CENTER);
+                        p.textSize(13);
+                        p.text(row.badge, iconX - 11, rowY - 10, 22, 22);
+                    p.pop();
+                }
+
+                p.push();
+                    p.textAlign(p.LEFT, p.CENTER);
+                    p.textSize(labelSize);
+                    p.fill(255, 235, 207);
+                    p.text(row.label, labelX, rowY - 1);
+
+                    if (row.isScore) {
+                        this.drawEndScoreInlineValue(valueX, rowY - 1, row.value, row.bonusGold, {
+                            align: "right",
+                            valueSize,
+                            gap: 8,
+                            valueColor: [255, 255, 255]
+                        });
+                    } else {
+                        p.textAlign(p.RIGHT, p.CENTER);
+                        p.textSize(valueSize);
+                        p.fill(row.valueColor?.[0] ?? 255, row.valueColor?.[1] ?? 255, row.valueColor?.[2] ?? 255);
+                        p.text(row.value, valueX, rowY - 1);
+                    }
+                p.pop();
+            });
+        }
         background(){
            
             p.push();
@@ -3421,8 +3571,8 @@
             const diffBtnH = Math.round(p.height * 0.09);
             console.log(diffBtnW, diffBtnH)
             const diffBtnX = Math.round((p.width - diffBtnW) / 2);
-            const diffStartY = Math.round(p.height * 0.22);
-            const diffGap = Math.round(diffBtnH * 0.7);
+            const diffStartY = Math.round(p.height * 0.59);
+            const diffGap = Math.round(diffBtnH * 0.3);
             const diffTextSize = Math.max(20, Math.round(diffBtnH * 0.45));
 
             p.buttonsArr.push(new Buttons('Easy', [p.t("button.easy") , 0 , 0, diffTextSize , p.variables.buttTextureStart, p.variables.buttTextureStartHov], diffBtnX, diffStartY , 0 , diffBtnW , diffBtnH , 1 , 'dif', () =>{  
@@ -3471,7 +3621,7 @@
             p.buttonsArr.push(new Buttons('readinessMinus', ['-' , 0 , 0, 20, p.variables.buttTextureMinus], 380, 490 , 30 , 30 , 30 , 2 , 'sets', () =>{  
                 p.menu.toggleTowerAttackReadinessBar();
             }));
-            p.buttonsArr.push(new Buttons('end', [p.t("button.ok") , 0 ,0, 24, p.variables.buttTexture, p.variables.buttTextureHov], p.width/2+10, p.height/2 +120 , 36 , 100 , 40 , 1 , 'gameEnd', () =>{
+            p.buttonsArr.push(new Buttons('end', [p.t("button.finish") , 0 ,0, 20, p.variables.buttTexture, p.variables.buttTextureHov], p.width/2+10, p.height/2 +120 , 36 , 140 , 40 , 1 , 'gameEnd', () =>{
                 location.reload()
             }, 'rect' 
             ));
@@ -3517,19 +3667,26 @@
             p.localStorage.save();
         }
 
-        syncLoseSoundVolume() {
+        syncEndMusicVolume() {
             const soundVolumeRaw = Number(p.variables.soundBound?.volume);
             const soundVolume = Math.max(0, Math.min(1, Number.isFinite(soundVolumeRaw) ? soundVolumeRaw : 1));
             if (p.variables.gameLoseMusic) {
                 p.variables.gameLoseMusic.volume = soundVolume;
             }
+            if (p.variables.gameWinMusic) {
+                p.variables.gameWinMusic.volume = soundVolume;
+            }
+        }
+
+        syncLoseSoundVolume() {
+            this.syncEndMusicVolume();
         }
 
         changeSoundVolume(step){
             const currentIndex = this.getVolumeStepIndex(p.variables.soundBound.volume);
             const nextIndex = this.getWrappedIndex(currentIndex, step, 11);
             p.variables.soundBound.volume = nextIndex / 10;
-            this.syncLoseSoundVolume();
+            this.syncEndMusicVolume();
             p.localStorage.save();
         }
 
@@ -3768,7 +3925,7 @@
         showMainMenu(){
             p.push();
                 p.noStroke();
-                p.texture(this.textureBackground)
+                p.texture(this.textureStartBackground)
                 p.rect(-p.width/2, -p.height/2 , p.width , p.height+20);
                
             p.pop();
@@ -3862,9 +4019,9 @@
             const diffGap = Math.round(diffBtnH * 0.7);
             const cardsTop = diffStartY + (diffBtnH + diffGap) * 2 + diffBtnH + 24;
             const panelX = 18;
-            const panelY = cardsTop;
+            const panelY = cardsTop-400;
             const panelW = p.width - panelX * 2;
-            const panelH = Math.max(150, p.height - panelY - 20);
+            const panelH = Math.max(150, p.height - panelY - 420);
             const titleH = 30;
             const cardsY = panelY + titleH + 8;
             const cardsH = panelH - titleH - 12;
@@ -4189,26 +4346,29 @@
                     const placeholderH = row.h - 20;
 
                     p.noStroke();
-                    p.fill(72, 42, 24, 150);
-                    p.rect(rx, ry + 4, row.w, row.h, 12);
+                    p.fill(48, 30, 17, 250);
+                    p.rect(rx, ry - 4, row.w, row.h, 12);
 
-                    p.fill(116, 73, 43, 236);
+                    p.fill(96, 59, 34);
                     p.rect(rx, ry, row.w, row.h, 12);
 
-                    p.stroke(66, 39, 23, 190);
-                    p.strokeWeight(1.2);
-                    p.noFill();
-                    p.rect(rx + 0.5, ry + 0.5, row.w - 1, row.h - 1, 12);
+                    // p.stroke(66, 39, 23, 190);
+                    // p.strokeWeight(1.2);
+                    // p.noFill();
+                    // p.rect(rx + 0.5, ry + 0.5, row.w - 1, row.h - 1, 12);
 
-                    p.noStroke();
-                    p.fill(245, 222, 188, 245);
-                    p.rect(placeholderX, placeholderY, placeholderW, placeholderH, 10);
 
+                    // if (p.variables.lineInfoTexture) {
+                    //     p.texture(p.variables.lineInfoTexture);
+                    //     p.rect(rx, ry, row.w, row.h);
+                    // } else {
+                    //     p.fill(116, 73, 43, 236);
+                    //     p.rect(rx, ry, row.w, row.h, 12);
+                    // }
+           
                     if (row.icon) {
                         p.imageMode(p.CORNER);
-                        p.tint(120, 76, 48, 255);
                         p.image(row.icon, placeholderX + 7, placeholderY + 6, placeholderW - 14, placeholderH - 12);
-                        p.noTint();
                     } else {
                         p.fill(120, 76, 48, 235);
                         p.textAlign(p.CENTER, p.CENTER);
@@ -4303,8 +4463,8 @@
                 closeBtn.w = closeW;
                 closeBtn.h = closeH;
                 closeBtn.textSize = 24;
-                closeBtn.texture = p.variables.buttTextureStart;
-                closeBtn.textureHov = p.variables.buttTextureStartHov;
+                closeBtn.texture = p.variables.buttTexture;
+                closeBtn.textureHov = p.variables.buttTextureHov;
                 setPos("close", closeX, closeY);
             }
             rows.forEach((row) => {
@@ -4333,7 +4493,7 @@
             if (mode === "choice") {
                 const layout = {
                     centerY: p.height / 2 - 18,
-                    cardH: 292,
+                    cardH: 350,
                     finishX: p.width / 2 - 148,
                     continueX: p.width / 2 + 8,
                     btnYGap: 18
@@ -4345,8 +4505,8 @@
             }
 
             const layout = mode === "lose"
-                ? { centerY: p.height / 2 - 8, cardH: 252, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 16 }
-                : { centerY: p.height / 2 - 50, cardH: 310, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 };
+                ? { centerY: p.height / 2 - 18, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 }
+                : { centerY: p.height / 2 - 18, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 };
 
             const buttonY = Math.round(layout.centerY + layout.cardH / 2 + layout.btnYGap);
             setPos("endStats", layout.statsX, buttonY);
@@ -4354,217 +4514,117 @@
         }
         showGameEndScreen(){
             const endScoreGoldBonus = this.finalizeEndScore();
-            if(p.gamePassed)
-            {
-                this.updateGameEndButtonsLayout("win");
-                p.push()
-                    p.push(); 
-                        p.noStroke();
-                        p.angleMode(p.DEGREES);
-                        p.rectMode(p.CENTER);
-                        p.texture(p.variables.textureWinLose)
-                        p.translate( 0, -50, 36);
-                        p.rect(0, 0, 400, 310);
-                    
-                        p.translate( 0, 0, 2);
-                        p.textSize(26)
-                        p.fill('#fff');
-                        p.textAlign(p.CENTER);
-                        p.text(p.t("game.completed_title"), 0, 30, p.width/2 , 300  );
-                        p.textSize(20)
-                        p.text(p.t("game.endless_unlocked"), 0, 75, p.width/2 , 300  );
-                        p.textSize(26)
-
-                        p.push();
-                            p.noStroke();
-                            p.texture( p.variables.scoreTexture)
-                            p.rect(-92, -5, 24 , 26) 
-                        p.pop();
-                        this.drawEndScoreInlineValue(-16, 180, p.variables.score, endScoreGoldBonus, {
-                            align: "center",
-                            valueSize: 26,
-                            gap: 10
-                        });
-
-                        p.push();
-                            p.noStroke();
-                            p.texture( p.variables.clockImg)
-                            p.rect(60, -5, 28 , 30) 
-                        p.pop();
-                        p.text(this.formatElapsedTime(p.menu.time), 60, 180, p.width/2, 300 );
-                    p.pop(); 
-                    p.drawButtons('gameEnd');
-                p.pop()
+            const endExperience = this.getEndExperienceEarned();
+            const clearedMainCampaign = this.hasClearedMainCampaign();
+            const currentWave = Math.max(0, p.game?.wave ?? 0);
+            const mode = clearedMainCampaign ? "win" : "lose";
+            this.updateGameEndButtonsLayout(mode);
+            if (p.game) {
+                clearedMainCampaign ? p.game.playWinMusic?.() : p.game.playLoseMusic?.();
             }
-            else if(p.gameWon)
-            {
-                this.updateGameEndButtonsLayout("win");
-                p.push()
-                    p.push(); 
-                        p.noStroke();
-                        p.angleMode(p.DEGREES);
-                        p.rectMode(p.CENTER);
-                        p.texture(p.variables.textureWinLose)
-                        p.translate( 0, -50, 36);
-                        p.rect(0, 0, 400, 310);
-                    
-                        p.translate( 0, 0, 2);
-                        p.textSize(28)
-                        p.fill('#fff');
-                        p.textAlign(p.CENTER);
-                        p.text(p.t("game.congratulations") , 0, 30, p.width/2 , 300  );
-                        p.textSize(22)
-                        p.text(p.t("game.completed"), 0, 75, p.width/2, 300  );
-                        p.textSize(26)
 
-                        p.push();
-                            p.noStroke();
-                            p.texture( p.variables.scoreTexture)
-                            p.rect(-92, -5, 24 , 26) 
-                        p.pop();
-                        this.drawEndScoreInlineValue(-16, 180, p.variables.score, endScoreGoldBonus, {
-                            align: "center",
-                            valueSize: 26,
-                            gap: 10
-                        });
+            const rows = [
+                {
+                    label: p.t("game.summary_time"),
+                    value: this.formatElapsedTime(p.menu.time),
+                    icon: p.variables.clockImg,
+                    iconTint: [255, 235, 207]
+                },
+                {
+                    label: p.t("game.summary_score"),
+                    value: p.variables.score,
+                    isScore: true,
+                    bonusGold: endScoreGoldBonus,
+                    icon: p.variables.scoreTexture,
+                    iconTint: [255, 235, 207]
+                },
+                {
+                    label: p.t("panel.wave"),
+                    value: `${currentWave}`,
+                    icon: p.variables.waveTexture,
+                    iconTint: [255, 235, 207]
+                },
+                {
+                    label: p.t("game.summary_exp"),
+                    value: this.formatExperienceValue(endExperience),
+                    icon: p.variables.expTexture,
+                    iconTint: [255, 233, 191],
+                    valueColor: [255, 233, 191]
+                }
+            ];
 
-                        p.push();
-                            p.noStroke();
-                            p.texture( p.variables.clockImg)
-                            p.rect(60, -5, 28 , 30) 
-                        p.pop();
-                        p.text(this.formatElapsedTime(p.menu.time), 60, 180, p.width/2, 300 );
+            p.push()
+                p.push();
+                    p.noStroke();
+                    p.angleMode(p.DEGREES);
+                    p.rectMode(p.CENTER);
+                    p.texture(p.variables.textureWinLose)
+                    p.translate( 0, -18, 36);
+                    p.rect(0, 0, 420, 350);
 
-                        // p.text(`НАГРАДА:`,0, 240, p.width/2, 300 );
-                        // p.fill('rgba(255, 0, 229, 1)')
-                        // p.text(`EXP`,-30, 270, p.width/2, 300 );
-                        // p.fill('#fff');
-                        // p.text(p.variables.rewards[p.variables.diff].r, 30, 270, p.width/2, 300 );//
-                    p.pop(); 
-                    p.drawButtons('gameEnd');
-                p.pop()
-            }
-            if(!p.gameWon && !p.gamePassed)
-            {
-                this.updateGameEndButtonsLayout("lose");
-                const loseRows = [
-                    {
-                        label: p.t("game.summary_score"),
-                        value: p.variables.score,
-                        isScore: true,
-                        bonusGold: endScoreGoldBonus,
-                        icon: p.variables.scoreTexture,
-                        iconTint: [255, 220, 120]
-                    },
-                    {
-                        label: p.t("game.summary_time"),
-                        value: this.formatElapsedTime(p.menu.time),
-                        icon: p.variables.clockImg,
-                        iconTint: [150, 210, 255]
-                    },
-                    {
-                        label: p.t("panel.wave"),
-                        value: `${p.game?.wave ?? 0}`,
-                        icon: null,
-                        iconTint: [255, 180, 180]
-                    }
-                ];
+                    p.translate( 0, 0, 2);
+                    p.fill('#fff');
+                    p.textAlign(p.CENTER, p.CENTER);
+                    p.textSize(clearedMainCampaign ? 30 : 28);
+                    p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -110);
 
-                p.push()
-                    p.push(); 
-                        p.noStroke();
-                        p.angleMode(p.DEGREES);
-                        p.rectMode(p.CENTER);
-                        p.texture(p.variables.textureWinLose)
-                    
-                        p.translate( 0, -8, 36);
-                        p.rect(0, 0, 380, 252);
-                    
-                        p.translate( 0, 0, 2);
-                        p.textSize(28)
-                        p.fill('#fff'); 
-                        p.textAlign(p.CENTER);
-                        p.text(p.t("game.lost"), 0, 50, p.width/2, 300);
+                    p.textSize(22);
+                    p.fill(255, 245, 228);
+                    // p.text(
+                    //     p.t("game.summary_title"),
+                    //     0,
+                    //     -88
+                    // );
 
-                        const rowStartY = -32;
-                        const rowGap = 50;
-                        loseRows.forEach((row, index) => {
-                            const rowY = rowStartY + index * rowGap;
-
-                            p.push();
-                                p.noStroke();
-                                p.fill(16, 22, 34, 205);
-                                p.rect(0, rowY, 272, 42, 14);
-                            p.pop();
-
-                            if (row.icon) {
-                                p.push();
-                                    p.noStroke();
-                                    p.tint(row.iconTint[0], row.iconTint[1], row.iconTint[2], 255);
-                                    p.texture(row.icon);
-                                    p.rect(-96, rowY, 22, 22);
-                                    p.noTint();
-                                p.pop();
-                            } else {
-                                p.push();
-                                    p.noStroke();
-                                    p.fill(row.iconTint[0], row.iconTint[1], row.iconTint[2], 230);
-                                    p.circle(-96, rowY, 12);
-                                p.pop();
-                            }
-
-                            p.push();
-                                p.textAlign(p.LEFT, p.CENTER);
-                                p.textSize(14);
-                                p.fill(186, 198, 226);
-                                p.text(row.label, -66, rowY - 2);
-
-                                if (row.isScore) {
-                                    this.drawEndScoreInlineValue(104, rowY - 1, row.value, row.bonusGold, {
-                                        align: "right",
-                                        valueSize: 20,
-                                        gap: 8
-                                    });
-                                } else {
-                                    p.textAlign(p.RIGHT, p.CENTER);
-                                    p.textSize(20);
-                                    p.fill(255);
-                                    p.text(row.value, 104, rowY - 1);
-                                }
-                            p.pop();
-                        });
-                    p.pop(); 
-                    p.drawButtons('gameEnd');
-                p.pop()
-            } 
-            if (p.game?.towerDamagePanelOpen) {
-                p.game.drawTowerDamagePanel();
-            }
+                    this.drawEndInfoRows(rows, {
+                        rowW: 330,
+                        rowH: 42,
+                        startY: -25,
+                        rowGap: 48,
+                        iconX: -124,
+                        labelX: -96,
+                        valueX: 134,
+                        labelSize: 18,
+                        valueSize: 20
+                    });
+                p.pop();
+                p.drawButtons('gameEnd');
+            p.pop()
+            p.game?.drawTowerDamageRightMenu?.();
             p.angleMode(p.RADIANS);
             }
 
         showWinChoice(){
             if(!p.gameStarted || p.gameEnded) return;
-            const targetWaves = p.game?.mainCampaignWaves || 0;
+            const targetWaves = p.game?.mainCampaignWaves || 15;
+            const currentWave = Math.max(0, p.game?.wave ?? targetWaves);
+            const endExperience = this.getEndExperienceEarned();
             this.updateGameEndButtonsLayout("choice");
             const choiceRows = [
-                {
-                    label: p.t("game.summary_score"),
-                    value: `${p.variables.score}`,
-                    icon: p.variables.scoreTexture,
-                    iconTint: [255, 220, 120]
-                },
                 {
                     label: p.t("game.summary_time"),
                     value: this.formatElapsedTime(p.menu.time),
                     icon: p.variables.clockImg,
-                    iconTint: [150, 210, 255]
+                    iconTint: [255, 235, 207]
+                },
+                {
+                    label: p.t("game.summary_score"),
+                    value: `${p.variables.score}`,
+                    icon: p.variables.scoreTexture,
+                    iconTint: [255, 235, 207]
                 },
                 {
                     label: p.t("panel.wave"),
-                    value: `${targetWaves}`,
-                    icon: null,
-                    iconTint: [140, 255, 208]
+                    value: `${currentWave}`,
+                    icon: p.variables.waveTexture,
+                    iconTint: [255, 235, 207]
+                },
+                {
+                    label: p.t("game.summary_exp"),
+                    value: this.formatExperienceValue(endExperience),
+                    icon: p.variables.expTexture,
+                    iconTint: [255, 233, 191],
+                    valueColor: [255, 233, 191]
                 }
             ];
             p.push()
@@ -4574,55 +4634,27 @@
                     p.rectMode(p.CENTER);
                     p.texture(p.variables.textureWinLose)
                     p.translate( 0, -18, 36);
-                    p.rect(0, 0, 400, 292);
+                    p.rect(0, 0, 420, 350);
                 
                     p.translate( 0, 0, 2);
-                    p.textSize(26)
+                    p.textSize(30)
                     p.fill('#fff');
-                    p.textAlign(p.CENTER);
-                    p.text(p.t("game.cleared_waves", { waves: targetWaves }), 0, 34, p.width/2 , 300  );
-                    p.textSize(18)
-                    p.fill(196, 210, 235);
-                    p.text(p.t("game.finish_or_continue"), 0, 68, p.width/2 , 300  );
+                    p.textAlign(p.CENTER, p.CENTER);
+                    p.text(p.t("game.congratulations"), 0, -106);
+                    p.textSize(22)
+                    p.fill(255, 245, 228);
+                    p.text(p.t("game.finish_or_continue"), 0, -88);
 
-                    const rowStartY = -16;
-                    const rowGap = 48;
-                    choiceRows.forEach((row, index) => {
-                        const rowY = rowStartY + index * rowGap;
-
-                        p.push();
-                            p.noStroke();
-                            p.fill(16, 22, 34, 205);
-                            p.rect(0, rowY, 284, 42, 14);
-                        p.pop();
-
-                        if (row.icon) {
-                            p.push();
-                                p.noStroke();
-                                p.tint(row.iconTint[0], row.iconTint[1], row.iconTint[2], 255);
-                                p.texture(row.icon);
-                                p.rect(-102, rowY, 22, 22);
-                                p.noTint();
-                            p.pop();
-                        } else {
-                            p.push();
-                                p.noStroke();
-                                p.fill(row.iconTint[0], row.iconTint[1], row.iconTint[2], 230);
-                                p.circle(-102, rowY, 12);
-                            p.pop();
-                        }
-
-                        p.push();
-                            p.textAlign(p.LEFT, p.CENTER);
-                            p.textSize(14);
-                            p.fill(186, 198, 226);
-                            p.text(row.label, -72, rowY - 2);
-
-                            p.textAlign(p.RIGHT, p.CENTER);
-                            p.textSize(20);
-                            p.fill(255);
-                            p.text(row.value, 110, rowY - 1);
-                        p.pop();
+                    this.drawEndInfoRows(choiceRows, {
+                        rowW: 330,
+                        rowH: 42,
+                        startY: -25,
+                        rowGap: 48,
+                        iconX: -124,
+                        labelX: -96,
+                        valueX: 134,
+                        labelSize: 18,
+                        valueSize: 20
                     });
                 p.pop(); 
                 p.drawButtons('postWin');
@@ -4641,8 +4673,7 @@
             }
             p.variables.gameMusic.volume =  p.localObject.music;
             p.variables.soundBound.volume = Math.max(0, Math.min(1, Number(p.localObject.sound) || 0));
-            p.menu?.syncLoseSoundVolume?.();
-            // p.variables.soundGameWin.volume = p.variables.gameMusic.volume;
+            p.menu?.syncEndMusicVolume?.();
             p.applyLanguage(p.localObject.lang || "ru", true);
             p.applyGraphicsQuality(p.localObject.graphics || "low", true);
             p.showTowerAttackReadinessBar = p.localObject.showTowerAttackReadinessBar !== false;
@@ -9491,7 +9522,7 @@
 
             this.towerStatsButton = new Buttons(
                     'towerStats',
-                    [p.t("button.stats"), 0, 0, 18, p.variables.buttStartWave, p.variables.buttStartWaveHov],
+                    [p.t("button.stats"), 0, 0, 22, p.variables.buttStartWave, p.variables.buttStartWaveHov],
                     bottomButtonLayout.rightX,
                     waveBtnY,
                     10,
@@ -9502,8 +9533,14 @@
                     () => {
                         if (!p.game) return;
                         p.game.towerDamagePanelOpen = !p.game.towerDamagePanelOpen;
+                        if (p.game.towerDamagePanelOpen) {
+                            p.game.towerDamagePanelMode = "wave";
+                        }
+                        p.game.selectedTowerType = null;
+                        p.game.buildMode = null;
                         p.game._towerDamagePanelDirty = true;
                         p.game._towerDamagePanelNextRefresh = 0;
+                        p.game.updateTowerStatsButtonLabel();
                     }
                 );
             p.buttonsArr.push(this.towerStatsButton);
@@ -9555,7 +9592,7 @@
             this.lastWaveDamageDuration = 0;
             this.aliveUnitHpRatioAvg = 1;
             this.towerDamagePanelOpen = false;
-            this.towerDamagePanelMode = "total";
+            this.towerDamagePanelMode = "wave";
             this.towerInstanceCounters = {};
             this.lastEndlessBossId = null;
             this._towerDamagePanelGfx = null;
@@ -9611,16 +9648,43 @@
         }
 
         getSpeedButtonsLayout() {
-            const btnW = 50;
-            const btnH = 30;
+            const btnW = 54;
+            const btnH = 35;
             const speedGap = 8;
             const speeds = [0.5, 1, 2, 3];
             const totalSpeedW = btnW * speeds.length + speedGap * (speeds.length - 1);
-            const baseX = FIELD_WIDTH + Math.floor((UI_WIDTH - totalSpeedW) / 2);
+            const baseX = FIELD_WIDTH + Math.floor((UI_WIDTH - totalSpeedW) / 2) +2;
             const waveBtnH = this.waveButton?.h ?? 50;
             const waveBtnY = p.height - waveBtnH - 30;
-            const baseY = waveBtnY - btnH - 12;
+            const baseY = waveBtnY - btnH - 6;
             return { btnW, btnH, speedGap, totalSpeedW, baseX, baseY, speeds };
+        }
+
+        getSpeedButtonTexture(index, state = "normal") {
+            if (!p.speedButtonTextures) {
+                p.speedButtonTextures = {
+                    normal: [
+                        p.loadImage("./img/speedBut1.png"),
+                        p.loadImage("./img/speedBut2.png"),
+                        p.loadImage("./img/speedBut3.png"),
+                        p.loadImage("./img/speedBut4.png")
+                    ],
+                    hover: [
+                        p.loadImage("./img/speedButHov1.png"),
+                        p.loadImage("./img/speedButHov2.png"),
+                        p.loadImage("./img/speedButHov3.png"),
+                        p.loadImage("./img/speedButHov4.png")
+                    ],
+                    active: [
+                        p.loadImage("./img/speedButActive1.png"),
+                        p.loadImage("./img/speedButActive2.png"),
+                        p.loadImage("./img/speedButActive3.png"),
+                        p.loadImage("./img/speedButActive4.png")
+                    ]
+                };
+            }
+
+            return p.speedButtonTextures[state]?.[index] || p.speedButtonTextures.normal?.[index] || null;
         }
 
         getWaveAutoStartRemaining() {
@@ -9685,8 +9749,23 @@
         }
 
         playLoseMusic() {
+            this.playEndMusic("lose");
+        }
+
+        playWinMusic() {
+            this.playEndMusic("win");
+        }
+
+        playEndMusic(type = "lose") {
+            if (this.endMusicType === type && this.endMusicPlayed) return;
+
             const music = p.variables.gameMusic;
-            const loseMusic = p.variables.gameLoseMusic;
+            const clip = type === "win"
+                ? p.variables.gameWinMusic
+                : p.variables.gameLoseMusic;
+            const otherClip = type === "win"
+                ? p.variables.gameLoseMusic
+                : p.variables.gameWinMusic;
 
             if (music) {
                 try {
@@ -9694,12 +9773,22 @@
                 } catch (e) {}
             }
 
-            if (!loseMusic) return;
-            p.menu?.syncLoseSoundVolume?.();
+            if (otherClip) {
+                try {
+                    otherClip.pause();
+                    otherClip.currentTime = 0;
+                } catch (e) {}
+            }
+
+            this.endMusicType = type;
+            this.endMusicPlayed = true;
+
+            if (!clip) return;
+            p.menu?.syncEndMusicVolume?.();
 
             try {
-                loseMusic.currentTime = 0;
-                loseMusic.play();
+                clip.currentTime = 0;
+                clip.play();
             } catch (e) {}
         }
 
@@ -9774,11 +9863,11 @@
                 p.noStroke();
                 p.text(p.t("wave.auto_start", { seconds: Math.ceil(remaining) }), screenX, barY - 6);
 
-                p.fill(18, 24, 38, 210);
+                p.fill(60, 39, 19, 210);
                 p.rectMode(p.CENTER);
                 p.rect(screenX, barY + 3, barW, barH, 4);
 
-                p.fill(255, 210, 110, 235);
+                p.fill(178, 217, 53, 235);
                 p.rectMode(p.CORNER);
                 p.rect(screenX - barW / 2, barY, barW * progress, barH, 4);
             p.pop();
@@ -10423,7 +10512,7 @@
                     cx: cell.cx,
                     cy: cell.cy,
                     x: pos.x,
-                    y: pos.y
+                    y: pos.y+6
                 });
             }
 
@@ -11552,7 +11641,6 @@
 
             // Обычная волна
             const waveBudgetMult = this.difficultyProfile?.waveBudgetMult || 1;
-            //ТЕСТ
             let budget = Math.max(6, Math.round((10 + this.wave * 3) * waveBudgetMult));
 
             const normalPool = this.getEnemyPool("normal", { excludeTreasure });
@@ -11739,6 +11827,7 @@
             this.updateSpecialBuildTileSignature();
             p.menu.time = 0;
             p.variables.score = 0;
+            p.variables.experienceEarned = 0;
 
             this.wave = 0;
             this.units.length = 0;
@@ -11777,11 +11866,14 @@
             this.aliveUnitHpRatioAvg = 1;
             p.menu?.resetEndScoreConversion?.();
             this.towerDamagePanelOpen = false;
-            this.towerDamagePanelMode = "total";
+            this.towerDamagePanelMode = "wave";
+            this.updateTowerStatsButtonLabel();
             this.towerInstanceCounters = {};
             this.lastEndlessBossId = null;
             this._towerDamagePanelDirty = true;
             this._towerDamagePanelNextRefresh = 0;
+            this.endMusicPlayed = false;
+            this.endMusicType = null;
             this.resetPerfStats();
 
             this.initTowerProgression();
@@ -11803,6 +11895,10 @@
             try {
                 p.variables.gameLoseMusic.pause();
                 p.variables.gameLoseMusic.currentTime = 0;
+            } catch (e) {}
+            try {
+                p.variables.gameWinMusic.pause();
+                p.variables.gameWinMusic.currentTime = 0;
             } catch (e) {}
             p.variables.gameMusic.play();
         }
@@ -11835,6 +11931,11 @@
         updatePauseButtonLabel() {
             if (!this.pauseButton) return;
             this.pauseButton.text = p.t(this.paused ? "button.start" : "button.pause");
+        }
+
+        updateTowerStatsButtonLabel() {
+            if (!this.towerStatsButton) return;
+            this.towerStatsButton.text = p.t(this.towerDamagePanelOpen ? "button.towers" : "button.stats");
         }
 
         worldToCell(x, y) {
@@ -12277,7 +12378,7 @@
                 cx,
                 cy,
                 x: pos.x,
-                y: pos.y
+                y: pos.y+6
             });
             return true;
         }
@@ -12511,14 +12612,16 @@
                 const textAlphaScale = hovered ? 0.6 : 1;
 
                 p.noStroke();
-                p.fill(16, 22, 34, 236 * bgAlphaScale);
-                p.rect(tx, ty, boxW, boxH, 8);
-
+                // p.fill(16, 22, 34, 236 * bgAlphaScale);
+                p.push();
+                    p.texture(p.variables.backPopupTexture)
+                    p.rect(tx, ty, boxW, boxH, 8);
+                p.pop();
                 const headerColor = panel.headerColor || [58, 108, 176];
-                p.fill(headerColor[0], headerColor[1], headerColor[2], 160 * bgAlphaScale);
-                p.rect(tx, ty, boxW, headerH, 8, 8, 0, 0);
+                // p.fill(headerColor[0], headerColor[1], headerColor[2], 160 * bgAlphaScale);
+                // p.rect(tx, ty, boxW, headerH, 8, 8, 0, 0);
 
-                p.fill(255, 255, 255, 255 * textAlphaScale);
+                p.fill(headerColor[0], headerColor[1], headerColor[2], 255);
                 p.textSize(titleSize);
                 p.text(panel.title || "", tx + pad, ty + 7);
 
@@ -12565,7 +12668,7 @@
                 text: this.getTileDisplayName(tile.id),
                 detail,
                 kind: tile.kind || "positive",
-                headerColor: tile.kind === "negative" ? [196, 82, 82] : [58, 108, 176],
+                headerColor: tile.kind === "negative" ? [255, 32, 22] : [38, 32, 255],
                 side: "top"
             };
         }
@@ -13182,12 +13285,12 @@
                             p.fill(255, 220, 80);
 
                         if (Number.isFinite(t.cost)) {
-                            const costText = t.id === "sell" ? `+${t.cost}` : `${t.cost}`;
+                            const costText = t.id === "sell" ? `+${t.cost}` : `${t.cost}`;          
                             p.text(costText, bx-10, by + 10);
                             if (p.goldTexture) {
                                 p.tint(255, 255, 255, 255);
                                 p.imageMode(p.CENTER);
-                                p.image(p.goldTexture, bx + 10, by + 19, 14, 14);
+                                p.image(p.goldTexture, bx + 10, by + 19, 16, 16);
                             } else {
                                 p.noStroke();
                                 p.fill(232, 188, 64);
@@ -13461,6 +13564,18 @@
         }
 
         drawTowerLevelBadge(ctx, cx, cy, size, unlocked = false) {
+            const texture = unlocked
+                ? p.variables.towerLevelUpdateTexture
+                : p.variables.towerLevelTexture;
+            if (texture) {
+                ctx.push();
+                    ctx.imageMode(p.CENTER);
+                    ctx.image(texture, cx, cy, size, size);
+                ctx.pop();
+                return;
+            }
+
+            /*
             const radius = size / 2;
             ctx.push();
                 ctx.strokeWeight(1.2);
@@ -13487,6 +13602,7 @@
                     ctx.line(cx - radius * 0.48, cy - radius * 0.48, cx + radius * 0.48, cy + radius * 0.48);
                 }
             ctx.pop();
+            */
         }
 
         shouldCacheHoverUiPanels() {
@@ -13689,6 +13805,221 @@
             }
             return false;
         }
+
+        getTowerDamageMenuLayout(panelX, panelY, panelW, panelH, panelPad = 10) {
+            const titleY = panelY + 20;
+            const closeSize = 24;
+            const closeButton = {
+                x: panelX + panelW - panelPad - closeSize,
+                y: panelY + 12,
+                w: closeSize,
+                h: closeSize
+            };
+            const line = {
+                x: panelX + panelPad,
+                y: panelY + 35,
+                w: panelW - panelPad * 2,
+                h: 12
+            };
+            const tabsY = panelY + 68;
+            const tabH = 24;
+            const tabW = Math.floor((panelW - panelPad * 2) / 2);
+            const tabs = [
+                { id: "wave", label: p.t("panel.wave"), x: panelX + panelPad, y: tabsY, w: tabW, h: tabH, flip: false },
+                { id: "total", label: p.t("panel.total"), x: panelX + panelPad + tabW, y: tabsY, w: tabW, h: tabH, flip: true }
+            ];
+            const rowH = 30;
+            const rowGap = 0;
+            const rowsY = tabsY + tabH + 2;
+            const bottomLimit = Math.min(panelY + panelH - 14, this.getWaveButtonPanelPos().y - 12);
+            const maxRows = Math.max(1, Math.floor((bottomLimit - rowsY) / (rowH + rowGap)));
+
+            return { titleY, closeButton, line, tabs, rowH, rowGap, rowsY, maxRows };
+        }
+
+        drawFlippedPanelTexture(texture, x, y, w, h, flip = false) {
+            if (!texture) return false;
+            p.push();
+                p.imageMode(p.CORNER);
+                if (flip) {
+                    p.translate(x + w, y);
+                    p.scale(-1, 1);
+                    p.image(texture, 0, 0, w, h);
+                } else {
+                    p.image(texture, x, y, w, h);
+                }
+            p.pop();
+            return true;
+        }
+
+        drawTowerDamageMenu(panelX, panelY, panelW, panelH, panelPad = 10) {
+            const mode = this.towerDamagePanelMode || "wave";
+            const rows = this.getTowerDamageRows(mode);
+            const layout = this.getTowerDamageMenuLayout(panelX, panelY, panelW, panelH, panelPad);
+            const visibleRows = rows.slice(0, layout.maxRows-3);
+            const hasMore = rows.length > visibleRows.length;
+            const rowTexture = p.variables.damageLineTexture;
+            const lastRowTexture = p.variables.damageLastLineTexture || rowTexture;
+
+            const clipText = (text, maxWidth) => {
+                if (p.textWidth(text) <= maxWidth) return text;
+                let clipped = text;
+                while (clipped.length > 0 && p.textWidth(`${clipped}...`) > maxWidth) {
+                    clipped = clipped.slice(0, -1);
+                }
+                return clipped ? `${clipped}...` : "...";
+            };
+
+            p.push();
+                p.translate(-p.width / 2, -p.height / 2, 5);
+
+                if (p.variables.rightMenuTexture) {
+                    p.image(p.variables.rightMenuTexture, panelX, panelY, panelW, panelH);
+                } else {
+                    p.noStroke();
+                    p.fill(20, 26, 34, 220);
+                    p.rect(panelX, panelY, panelW, panelH, 12);
+                }
+
+                p.noStroke();
+                p.fill(220, 230, 240);
+                p.textFont(p.variables.textFontFontick);
+                p.textAlign(p.LEFT, p.CENTER);
+                p.textSize(16);
+                p.text(p.t("panel.tower_damage"), panelX + panelPad, layout.titleY);
+
+                if (p.variables.damageExitTexture) {
+                    p.imageMode(p.CORNER);
+                    p.image(
+                        p.variables.damageExitTexture,
+                        layout.closeButton.x,
+                        layout.closeButton.y,
+                        layout.closeButton.w,
+                        layout.closeButton.h
+                    );
+                }
+
+                if (p.variables.towerPanelLineTexture) {
+                    p.imageMode(p.CORNER);
+                    p.image(p.variables.towerPanelLineTexture, layout.line.x, layout.line.y, layout.line.w, layout.line.h);
+                }
+
+                for (const tab of layout.tabs) {
+                    const active = tab.id === mode;
+                    const texture = active
+                        ? p.variables.damageActiveButtonTexture
+                        : p.variables.damageButtonTexture;
+                    this.drawFlippedPanelTexture(texture, tab.x, tab.y, tab.w, tab.h, tab.flip);
+
+                    p.noStroke();
+                    p.fill(active ? 46 : 245, active ? 31 : 226, active ? 20 : 196);
+                    p.textAlign(p.CENTER, p.CENTER);
+                    p.textSize(12);
+                    p.text(tab.label, tab.x + tab.w / 2, tab.y + tab.h / 2 + 1);
+                }
+
+                if (visibleRows.length === 0) {
+                    const y = layout.rowsY;
+                    this.drawFlippedPanelTexture(lastRowTexture, panelX + panelPad, y, panelW - panelPad * 2, layout.rowH, false);
+                    p.noStroke();
+                    p.fill(245, 226, 196);
+                    p.textAlign(p.CENTER, p.CENTER);
+                    p.textSize(12);
+                    p.text(
+                        mode === "wave" ? p.t("panel.no_wave_damage") : p.t("panel.no_damage"),
+                        panelX + panelW / 2,
+                        y + layout.rowH / 2
+                    );
+                } else {
+                    visibleRows.forEach((entry, index) => {
+                        const y = layout.rowsY + index * (layout.rowH + layout.rowGap);
+                        const isLast = index === visibleRows.length - 1 && !hasMore;
+                        const texture = isLast ? lastRowTexture : rowTexture;
+                        this.drawFlippedPanelTexture(texture, panelX + panelPad, y, panelW - panelPad * 2, layout.rowH, false);
+
+                        const dmgText = p.t("panel.damage_value", { value: Math.round(entry.totalDamage) });
+                        const dmgX = panelX + panelW - panelPad - 12;
+                        const nameX = panelX + panelPad + 16;
+                        p.textSize(12);
+                        const nameMaxWidth = Math.max(60, dmgX - nameX - p.textWidth(dmgText) - 18);
+                        const nameText = clipText(entry.name, nameMaxWidth);
+
+                        p.noStroke();
+                        p.fill(255, 239, 213);
+                        p.textAlign(p.LEFT, p.CENTER);
+                        p.text(nameText, nameX, y + layout.rowH / 2 + 1);
+
+                        p.textAlign(p.RIGHT, p.CENTER);
+                        p.text(dmgText, dmgX, y + layout.rowH / 2 + 1);
+                    });
+
+                    if (hasMore) {
+                        const y = layout.rowsY + visibleRows.length * (layout.rowH + layout.rowGap);
+                        this.drawFlippedPanelTexture(lastRowTexture, panelX + panelPad, y, panelW - panelPad * 2, layout.rowH, false);
+                        p.noStroke();
+                        p.fill(225, 205, 178);
+                        p.textAlign(p.LEFT, p.CENTER);
+                        p.textSize(11);
+                        p.text(
+                            p.t("panel.more_towers", { count: rows.length - visibleRows.length }),
+                            panelX + panelPad + 16,
+                            y + layout.rowH / 2 + 1
+                        );
+                    }
+                }
+            p.pop();
+        }
+
+        drawTowerDamageRightMenu() {
+            if (!this.towerDamagePanelOpen) return;
+
+            const panelX = FIELD_WIDTH + 8;
+            const panelY = 8;
+            const panelW = p.width - panelX - 8;
+            const panelH = p.height - 16;
+            const panelPad = 10;
+            this.drawTowerDamageMenu(panelX, panelY, panelW, panelH, panelPad);
+        }
+
+        handleTowerDamageMenuClick(x, y) {
+            if (!this.towerDamagePanelOpen) return false;
+
+            const panelX = FIELD_WIDTH + 8;
+            const panelY = 8;
+            const panelW = p.width - panelX - 8;
+            const panelH = p.height - 16;
+            const panelPad = 10;
+            const layout = this.getTowerDamageMenuLayout(panelX, panelY, panelW, panelH, panelPad);
+
+            if (
+                x >= layout.closeButton.x &&
+                x <= layout.closeButton.x + layout.closeButton.w &&
+                y >= layout.closeButton.y &&
+                y <= layout.closeButton.y + layout.closeButton.h
+            ) {
+                this.towerDamagePanelOpen = false;
+                this.updateTowerStatsButtonLabel();
+                return true;
+            }
+
+            for (const tab of layout.tabs) {
+                if (
+                    x >= tab.x &&
+                    x <= tab.x + tab.w &&
+                    y >= tab.y &&
+                    y <= tab.y + tab.h
+                ) {
+                    if (this.towerDamagePanelMode !== tab.id) {
+                        this.towerDamagePanelMode = tab.id;
+                        this._towerDamagePanelDirty = true;
+                        this._towerDamagePanelNextRefresh = 0;
+                    }
+                    return true;
+                }
+            }
+
+            return x >= panelX && x <= panelX + panelW && y >= panelY && y <= panelY + panelH;
+        }
         
         drawTowerPanel() {
             const panelX = FIELD_WIDTH + 8;
@@ -13698,9 +14029,14 @@
             const panelPad = 10;
             const cols = 2;
             const gap = 10;
-            const cardsTop = panelY + 42;
+            const cardsTop = panelY + 58;
             const cardW = Math.floor((panelW - panelPad * 2 - gap) / cols);
             const cardH = 92;
+
+            if (this.towerDamagePanelOpen) {
+                this.drawTowerDamageMenu(panelX, panelY, panelW, panelH, panelPad);
+                return;
+            }
 
             let hoverTower = null;
             let hoverItem = null;
@@ -13843,20 +14179,21 @@
 
                             g.textAlign(g.RIGHT, g.CENTER);
                             g.textSize(13);
-                            g.strokeWeight(2);
-                            if (!affordable) {
-                                g.stroke(255, 85, 85);
-                            } else if (selected && t.legendary) {
-                                g.stroke(255, 236, 170);
-                            } else if (selected) {
-                                g.stroke(70, 220, 120);
-                            } else if (t.legendary) {
-                                g.stroke(255, 205, 120);
-                            } else if (accentIds.has(key)) {
-                                g.stroke(...accentStroke);
-                            } else {
-                                g.stroke(...defaultStroke);
-                            }
+                            g.noStroke();
+                            // g.strokeWeight(2);
+                            // if (!affordable) {
+                            //     g.stroke(255, 85, 85);
+                            // } else if (selected && t.legendary) {
+                            //     g.stroke(255, 236, 170);
+                            // } else if (selected) {
+                            //     g.stroke(70, 220, 120);
+                            // } else if (t.legendary) {
+                            //     g.stroke(255, 205, 120);
+                            // } else if (accentIds.has(key)) {
+                            //     g.stroke(...accentStroke);
+                            // } else {
+                            //     g.stroke(...defaultStroke);
+                            // }
                             g.noFill();
                             g.rect(item.x, item.y, cardW, cardH, 10);
 
@@ -13923,17 +14260,15 @@
                             }
                             gText.text(label, item.x + cardW / 2, item.y + 8);
 
-                            const badgeSize = 12;
-                            const badgeGap = 5;
+                            const badgeSize = 14;
+                            const badgeGap = 3;
                             const badgeX = item.x + cardW - badgeSize / 2 - 10;
-                            const badgeStackH = levelCap * badgeSize + Math.max(0, levelCap - 1) * badgeGap;
-                            const badgeY = item.y + Math.round((cardH - badgeStackH) / 2) + badgeSize / 2;
                             for (let i = 0; i < levelCap; i++) {
                                 const filled = i < maxLevel;
                                 this.drawTowerLevelBadge(
                                     gText,
                                     badgeX,
-                                    badgeY + i * (badgeSize + badgeGap),
+                                    item.y + cardH -34 - i * (badgeSize + badgeGap),
                                     badgeSize,
                                     filled
                                 );
@@ -14032,6 +14367,17 @@
                 p.textSize(16);
                 p.text(p.t("panel.towers"), panelX + panelPad, panelY + 20);
 
+                if (p.variables.towerPanelLineTexture) {
+                    p.imageMode(p.CORNER);
+                    p.image(
+                        p.variables.towerPanelLineTexture,
+                        panelX + panelPad,
+                        panelY + 35,
+                        panelW - panelPad * 2,
+                        12
+                    );
+                }
+
                 if (this._towerPanelTextGfx) {
                     p.image(this._towerPanelTextGfx, panelX, panelY);
                 }
@@ -14067,7 +14413,7 @@
                 p.noStroke();
                 p.textFont(p.variables.textFontFontick);
                 p.textAlign(p.RIGHT, p.CENTER);
-                p.textSize(16);
+                p.textSize(18);
                 const goldY = panelY + 20;
                 const goldText = `${this.money}`;
                 p.fill(255, 220, 120);
@@ -14091,15 +14437,10 @@
             // ===== Speed buttons =====
             if (this.areSpeedButtonsVisible()) {
                 const { btnW, btnH, speedGap, baseX, baseY, speeds } = this.getSpeedButtonsLayout();
-                if (!p.icons.speed1) p.icons.speed1 = p.loadImage("./img/icons/speed1.png");
-                if (!p.icons.speed2) p.icons.speed2 = p.loadImage("./img/icons/speed2.png");
-                if (!p.icons.speed3) p.icons.speed3 = p.loadImage("./img/icons/speed3.png");
-                const speedIcons = [p.icons.speed2, p.icons.speed1, p.icons.speed2, p.icons.speed3];
 
                 p.push();
                     p.translate(-p.width / 2, -p.height / 2, 5);
-                    p.textAlign(p.CENTER, p.CENTER);
-                    p.textSize(14);
+                    p.imageMode(p.CORNER);
 
                     speeds.forEach((s, i) => {
                         const x = baseX + i * (btnW + speedGap);
@@ -14111,34 +14452,17 @@
                             p.mouseY > y &&
                             p.mouseY < y + btnH;
 
-                        if (p.gameSpeed === s) {
-                            p.fill(80, 200, 120);
-                        } else if (hovered) {
-                            p.fill(90);
+                        const state = p.gameSpeed === s ? "active" : (hovered ? "hover" : "normal");
+                        const texture = this.getSpeedButtonTexture(i, state);
+                        if (texture) {
+                            p.image(texture, x, y, btnW, btnH);
                         } else {
-                            p.fill(60);
-                        }
-
-                        p.stroke(200);
-                        p.rect(x, y, btnW, btnH, 6);
-
-                        p.noStroke();
-                        const icon = speedIcons[i];
-                        if (icon) {
-                            const iconW = 30;
-                            const iconH = 30;
-                            if (speeds[i] === 0.5) {
-                                p.push();
-                                    p.translate(x + btnW / 2, y + btnH / 2);
-                                    p.scale(-1, 1);
-                                    p.imageMode(p.CENTER);
-                                    p.image(icon, 0, 0, iconW, iconH);
-                                p.pop();
-                            } else {
-                                p.image(icon, x + (btnW - iconW) / 2, y + (btnH - iconH) / 2, iconW, iconH);
-                            }
-                        } else {
+                            p.noStroke();
+                            p.fill(p.gameSpeed === s ? 80 : hovered ? 90 : 60);
+                            p.rect(x, y, btnW, btnH, 6);
                             p.fill(255);
+                            p.textAlign(p.CENTER, p.CENTER);
+                            p.textSize(14);
                             p.text(`${s}x`, x + btnW / 2, y + btnH / 2);
                         }
                     });
@@ -14777,9 +15101,7 @@
                 iconSize
             } = panel;
             const alpha = (value) => Math.max(0, Math.min(255, Math.round(value * alphaScale)));
-            const titleBandX = ox + 8;
             const titleBandY = oy + 6;
-            const titleBandW = w - 16;
             const titleBandH = Math.max(20, headH - 6);
 
             ctx.push?.();
@@ -14791,11 +15113,10 @@
             }
 
             this.drawTowerPopupBackground(ctx, ox, oy, w, h, alpha(255));
-            this.drawTowerPopupLine(ctx, titleBandX, titleBandY, titleBandW, titleBandH, alpha(255));
 
             ctx.fill(255, 255, 255, alpha(255));
             ctx.textAlign(p.LEFT, p.CENTER);
-            ctx.textSize(13);
+            ctx.textSize(15);
             ctx.text(towerTitle, ox + pad + 2, titleBandY + titleBandH / 2 + 1);
 
             ctx.textAlign(p.RIGHT, p.CENTER);
@@ -14967,7 +15288,7 @@
         }
 
         drawTowerDamagePanel() {
-            if (!this.towerDamagePanelOpen) return;
+            if (!this.towerDamagePanelOpen || !this.useLegacyTowerDamagePanel) return;
 
             const mode = this.towerDamagePanelMode || "total";
             const rows = this.getTowerDamageRows(mode);
@@ -15289,9 +15610,7 @@
 
         renderBuildTooltipPanel(ctx, panel, ox = 0, oy = 0) {
             const { title, lines, w, h, headH, rowH, pad, iconSize } = panel;
-            const titleBandX = ox + 8;
             const titleBandY = oy + 6;
-            const titleBandW = w - 16;
             const titleBandH = Math.max(20, headH - 6);
 
             ctx.push?.();
@@ -15303,11 +15622,10 @@
             }
 
             this.drawTowerPopupBackground(ctx, ox, oy, w, h, 255);
-            this.drawTowerPopupLine(ctx, titleBandX, titleBandY, titleBandW, titleBandH, 255);
 
             ctx.fill(255);
             ctx.textAlign(p.LEFT, p.CENTER);
-            ctx.textSize(13);
+            ctx.textSize(15);
             ctx.text(title, ox + pad + 2, titleBandY + titleBandH / 2 + 1);
 
             lines.forEach((line, i) => {
@@ -15385,17 +15703,37 @@
         }
 
         drawLivesIndicator() {
-            const base = this.path.points[this.path.points.length - 1];;
+            const base = this.path.points[this.path.points.length - 1];
             const x = base.x;
             const y = base.y;
-            const r = 24;
+            const baseSize = 80;
+            const r = baseSize / 2;
+            const safeLives = Math.max(this.lives, 0);
+            const maxLives = Math.max(1, this.maxLives || safeLives || 1);
+            const hpPercent = Math.max(0, Math.min(100, (safeLives / maxLives) * 100));
+            const textureIndex =
+                hpPercent >= 76 ? 0 :
+                hpPercent >= 51 ? 1 :
+                hpPercent >= 26 ? 2 :
+                3;
+            const baseTexture = p.variables.baseTextures?.[textureIndex];
 
-
+            /*
             const safeLives = Math.max(this.lives, 0);
             const colorIndex = Math.floor(safeLives / 10) % 10;
             const color = p.STEAM_LEVEL_COLORS[colorIndex];
             const shapeIndex = Math.floor(safeLives / 100) % 2;
             const outerR = r * 1.25;
+
+            const drawHexagon = (cx, cy, radius) => {
+                p.beginShape();
+                for (let i = 0; i < 6; i++) {
+                    const a = p.TWO_PI * (i / 6) - p.PI / 6;
+                    p.vertex(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
+                }
+                p.endShape(p.CLOSE);
+            };
+            */
 
             p.push();
                 p.translate(-p.width / 2, -p.height / 2, 2);
@@ -15403,23 +15741,15 @@
                 if (this.isBaseHovered()) {
                     p.noStroke();
                     p.fill(92, 160, 230, 30);
-                    p.circle(x, y, outerR * 2.55);
+                    p.circle(x, y, baseSize * 1.6);
 
                     p.noFill();
                     p.stroke(255, 208, 138, 150);
                     p.strokeWeight(1.8);
-                    p.circle(x, y, outerR * 2.2);
+                    p.circle(x, y, baseSize * 1.35);
                 }
 
-                const drawHexagon = (cx, cy, radius) => {
-                    p.beginShape();
-                    for (let i = 0; i < 6; i++) {
-                        const a = p.TWO_PI * (i / 6) - p.PI / 6;
-                        p.vertex(cx + Math.cos(a) * radius, cy + Math.sin(a) * radius);
-                    }
-                    p.endShape(p.CLOSE);
-                };
-
+                /*
                 // основной контур (0–99 круг, 100–199 шестиугольник, далее повтор)
                 p.fill(30, 30, 30);
                 p.stroke(...color);
@@ -15428,6 +15758,16 @@
                     p.circle(x, y, outerR * 2);
                 } else {
                     drawHexagon(x, y, outerR);
+                }
+                */
+
+                if (baseTexture) {
+                    p.imageMode(p.CENTER);
+                    p.image(baseTexture, x, y, baseSize, baseSize);
+                } else {
+                    p.noStroke();
+                    p.fill(30, 30, 30);
+                    p.circle(x, y, baseSize);
                 }
 
                 if (this.baseHitFx > 0) {
@@ -15447,8 +15787,8 @@
                 p.noStroke();
                 p.fill(255);
                 p.textAlign(p.CENTER, p.CENTER);
-                p.textSize(18);
-                p.text(this.lives, x, y - 2);
+                p.textSize(16);
+                p.text(Math.ceil(safeLives), x, y - 8);
             p.pop();
         }
 
@@ -15752,9 +16092,17 @@
             // game over
             if (this.lives <= 0) {
                 if (!p.gameEnded) {
+                    const clearedMainCampaign = Boolean(
+                        this.endChoiceShown ||
+                        this.waitingEndChoice ||
+                        (this.endlessMode && this.wave > this.mainCampaignWaves)
+                    );
                     p.gameEnded = true;
-                    p.gameWon = false;
-                    this.playLoseMusic();
+                    p.gameWon = clearedMainCampaign;
+                    p.gamePassed = clearedMainCampaign;
+                    if (!clearedMainCampaign) {
+                        this.playLoseMusic();
+                    }
                 }
 
                 p.menu.showGameEndScreen();
@@ -15878,7 +16226,9 @@
         // }
 
         handleTowerPanelClick(x, y) {
-            if (this.handleTowerDamagePanelClick(x, y)) return true;
+            if (this.towerDamagePanelOpen) {
+                return this.handleTowerDamageMenuClick(x, y);
+            }
             if (x < FIELD_WIDTH) return false;
 
             // Bottom-right controls should win over tower cards if their areas intersect.
@@ -15907,7 +16257,7 @@
             const panelPad = 10;
             const cols = 2;
             const gap = 10;
-            const cardsTop = panelY + 42;
+            const cardsTop = panelY + 58;
             const cardW = Math.floor((panelW - panelPad * 2 - gap) / cols);
             const cardH = 92;
             const keys = Object.keys(p.TOWER_TYPES).filter(key => this.isTowerUnlocked(key));
@@ -15953,7 +16303,7 @@
         }
 
         handleTowerDamagePanelClick(x, y) {
-            if (!this.towerDamagePanelOpen) return false;
+            if (!this.towerDamagePanelOpen || !this.useLegacyTowerDamagePanel) return false;
 
             const mode = this.towerDamagePanelMode || "total";
             const rows = this.getTowerDamageRows(mode);
