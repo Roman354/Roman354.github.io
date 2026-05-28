@@ -12621,7 +12621,7 @@
                 // p.fill(headerColor[0], headerColor[1], headerColor[2], 160 * bgAlphaScale);
                 // p.rect(tx, ty, boxW, headerH, 8, 8, 0, 0);
 
-                p.fill(headerColor[0], headerColor[1], headerColor[2], 255);
+                p.fill(255, 255, 255, 255 * textAlphaScale);
                 p.textSize(titleSize);
                 p.text(panel.title || "", tx + pad, ty + 7);
 
@@ -12668,7 +12668,7 @@
                 text: this.getTileDisplayName(tile.id),
                 detail,
                 kind: tile.kind || "positive",
-                headerColor: tile.kind === "negative" ? [255, 32, 22] : [38, 32, 255],
+                headerColor: tile.kind === "negative" ? [196, 82, 82] : [58, 108, 176],
                 side: "top"
             };
         }
