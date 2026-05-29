@@ -166,7 +166,7 @@
             "button.go": "Start",
             "button.start": "Start",
             "button.pause": "Pause",
-            "button.stats": "Stats",
+            "button.stats": "Damage",
             "button.towers": "Towers",
             "button.upgrade": "Upgrade",
             "button.sell": "Sell",
