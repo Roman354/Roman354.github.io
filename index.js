@@ -163,7 +163,7 @@
             "button.ok": "OK",
             "button.finish": "Finish",
             "button.continue": "Continue",
-            "button.go": "WAVE",
+            "button.go": "START",
             "button.start": "Start",
             "button.pause": "Pause",
             "button.stats": "Stats",
@@ -3559,11 +3559,11 @@
         generateArrButtons()
         {
            
-            p.buttonsArr.push(new Buttons('fullScreen', ['' , 0 , 0, 20 , p.variables.buttTextureFS,  p.variables.buttTextureFsHov], 600, 670 , 0 , 50 , 50 , 1 , 'set', () =>{  
+            p.buttonsArr.push(new Buttons('fullScreen', ['' , 0 , 0, 20 , p.variables.buttTextureFS,  p.variables.buttTextureFsHov], 600, 669 , 2 , 50 , 50 , 1 , 'set', () =>{  
                 p.toggleFullscreen();
     
             }));
-            p.buttonsArr.push(new Buttons('Settings', ['' , 0 , 0, 20 , p.variables.buttTextureS,  p.variables.buttTextureSHov], 660, 670 , 0 , 50 , 50 , 1 , 'set', () =>{  
+            p.buttonsArr.push(new Buttons('Settings', ['' , 0 , 0, 20 , p.variables.buttTextureS,  p.variables.buttTextureSHov], 660, 669 , 2 , 50 , 50 , 1 , 'set', () =>{  
                 this.settingModal = true;
             }));
 
@@ -3870,9 +3870,9 @@
                     const valueStartX = 38;
                     const valueCenterY = y + cardH / 2 -4;
                     const cards = [
-                        { icon: p.variables.clockImg, value: this.formatElapsedTime(p.menu.time) },
-                        { icon: p.variables.scoreTexture, value: `${p.variables.score}` },
-                        { icon: p.variables.waveTexture, value: waveLabel }
+                        { icon: p.variables.clockImg, value: this.formatElapsedTime(p.menu.time), flag:"clock"  },
+                        { icon: p.variables.scoreTexture, value: `${p.variables.score}`, flag:"score" },
+                        { icon: p.variables.waveTexture, value: waveLabel, flag: "wave" }
                     ];
 
                     cards.forEach((card, index) => {
@@ -3882,7 +3882,13 @@
                             p.image(p.variables.bottomHudTexture, x, y, cardW, cardH);
                         }
                         if (card.icon) {
-                            p.image(card.icon, x + iconX, y + iconOffsetY, iconSize, iconSize);
+                            console.log(card)
+                            if(card.flag === "wave")
+                                p.image(card.icon, x + iconX-4, y + iconOffsetY-6, iconSize+10, iconSize+10);
+                            else if(card.flag === "score")
+                                p.image(card.icon, x + iconX-2, y + iconOffsetY-5, iconSize+4, iconSize+4);
+                            else
+                                p.image(card.icon, x + iconX-2, y + iconOffsetY-4, iconSize+3, iconSize+3);
                         }
 
                         if (labelFont) p.textFont(labelFont);
@@ -9850,8 +9856,8 @@
 
             const progress = p.constrain(this.prepTimer / Math.max(0.001, this.autoStartWaveDelay), 0, 1);
             const speedLayout = this.getSpeedButtonsLayout();
-            const screenX = speedLayout.baseX + speedLayout.totalSpeedW / 2;
-            const barW = Math.max(96, speedLayout.totalSpeedW);
+            const screenX = speedLayout.baseX + speedLayout.totalSpeedW / 2 -12;
+            const barW = Math.max(96, speedLayout.totalSpeedW - 15);
             const barH = 6;
             const barY = speedLayout.baseY + 16;
 
@@ -14363,7 +14369,7 @@
                 }
 
                 p.noStroke();
-                p.fill(220, 230, 240);
+                p.fill(255, 233, 191);
                 p.textFont(p.variables.textFontFontick);
                 p.textAlign(p.LEFT, p.CENTER);
                 p.textSize(16);
