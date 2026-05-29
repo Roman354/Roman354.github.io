@@ -8,7 +8,7 @@
     p.gameEnded = false;
     p.gamePassed = false;
     p.buttonsArr = [];
-    p.lang = "ru" //
+    p.lang = window.navigator.language === "en"? "en" : "ru" || "en"; 
     
     // ТЕСТ Выбор уровня
     p.ENABLE_TEST_START_LEVEL_PICKER = true;
@@ -268,6 +268,8 @@
         }
     };
     p.t = function(key, params = {}) {
+        if(key == "button.stats")
+            console.log("tut")
         const langPack = p.I18N[p.lang] || p.I18N.ru;
         const fallbackPack = p.I18N.ru;
         const template = langPack[key] ?? fallbackPack[key] ?? key;
