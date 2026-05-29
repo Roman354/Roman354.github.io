@@ -163,7 +163,7 @@
             "button.ok": "OK",
             "button.finish": "Finish",
             "button.continue": "Continue",
-            "button.go": "START",
+            "button.go": "Start",
             "button.start": "Start",
             "button.pause": "Pause",
             "button.stats": "Stats",
