@@ -268,8 +268,6 @@
         }
     };
     p.t = function(key, params = {}) {
-        if(key == "button.stats")
-            console.log("tut")
         const langPack = p.I18N[p.lang] || p.I18N.ru;
         const fallbackPack = p.I18N.ru;
         const template = langPack[key] ?? fallbackPack[key] ?? key;
