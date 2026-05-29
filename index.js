@@ -11,7 +11,7 @@
     p.lang = window.navigator.language === "en"? "en" : "ru" || "en"; 
     
     // ТЕСТ Выбор уровня
-    p.ENABLE_TEST_START_LEVEL_PICKER = true;
+    p.ENABLE_TEST_START_LEVEL_PICKER = false;
 
     p.I18N = {
         ru: {
@@ -9604,7 +9604,7 @@
             this._towerDamagePanelNextRefresh = 0;
 
             //ТЕСТ
-            this.perfMonitorEnabled = true;
+            this.perfMonitorEnabled = false;
             this.perfStats = {
                 fps: 0,
                 frameMs: 0,
