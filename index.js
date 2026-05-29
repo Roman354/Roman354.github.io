@@ -4570,7 +4570,7 @@
                     p.fill('#fff');
                     p.textAlign(p.CENTER, p.CENTER);
                     p.textSize(clearedMainCampaign ? 30 : 28);
-                    p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -110);
+                    p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -100);
 
                     p.textSize(22);
                     p.fill(255, 245, 228);
@@ -4644,10 +4644,10 @@
                     p.textSize(30)
                     p.fill('#fff');
                     p.textAlign(p.CENTER, p.CENTER);
-                    p.text(p.t("game.congratulations"), 0, -106);
-                    p.textSize(22)
-                    p.fill(255, 245, 228);
-                    p.text(p.t("game.finish_or_continue"), 0, -88);
+                    p.text(p.t("game.congratulations"), 0, -100);
+                    // p.textSize(22)
+                    // p.fill(255, 245, 228);
+                    // p.text(p.t("game.finish_or_continue"), 0, -88);
 
                     this.drawEndInfoRows(choiceRows, {
                         rowW: 330,
