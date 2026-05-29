@@ -11,7 +11,7 @@
     p.lang = "ru" //
     
     // ТЕСТ Выбор уровня
-    p.ENABLE_TEST_START_LEVEL_PICKER = false;
+    p.ENABLE_TEST_START_LEVEL_PICKER = true;
 
     p.I18N = {
         ru: {
@@ -3157,7 +3157,7 @@
             this.backPopupTexture = p.loadImage('./img/back_popup.png');
             this.linePopupTexture = p.loadImage('./img/icons/line_popup.png');
 
-            this.textFontFontick = p.loadFont("fonts/fontick/fontick.otf");
+            this.textFontFontick = p.loadFont("fonts/involve/Involve-SemiBold.ttf");
             this.textFontMP = p.loadFont("fonts/mpro/multiroundpro.otf");
 
             this.fullscreen = false;
@@ -3246,7 +3246,7 @@
                   
                     p.textSize(this.textSize)
                     p.textAlign(p.CENTER)
-                    p.fill('#fff');
+                    p.fill(255, 233, 191);
                     p.translate(this.x +  this.textX, this.y +  this.h/2 + this.textY, this.z + this.d/2+1);
                     p.text(this.text, 0, 0,  this.w ,  this.h-this.textSize/2);
                 p.pop();
@@ -13285,12 +13285,14 @@
                             p.fill(255, 220, 80);
 
                         if (Number.isFinite(t.cost)) {
-                            const costText = t.id === "sell" ? `+${t.cost}` : `${t.cost}`;          
-                            p.text(costText, bx-10, by + 10);
+                            const costText = t.id === "sell" ? `+${t.cost}` : `${t.cost}`; 
+                            p.textSize(15);
+                            p.textStyle(p.BOLD);
+                            p.text(costText, bx +12, by + 17);
                             if (p.goldTexture) {
                                 p.tint(255, 255, 255, 255);
                                 p.imageMode(p.CENTER);
-                                p.image(p.goldTexture, bx + 10, by + 19, 16, 16);
+                                p.image(p.goldTexture, bx - 12, by + 23, 25, 25);
                             } else {
                                 p.noStroke();
                                 p.fill(232, 188, 64);
@@ -13945,7 +13947,7 @@
                         const nameText = clipText(entry.name, nameMaxWidth);
 
                         p.noStroke();
-                        p.fill(255, 239, 213);
+                        p.fill(255, 233, 191);
                         p.textAlign(p.LEFT, p.CENTER);
                         p.text(nameText, nameX, y + layout.rowH / 2 + 1);
 
@@ -14254,9 +14256,9 @@
                             gText.textAlign(gText.CENTER, gText.CENTER);
                             gText.textSize(10);
                             if (t.legendary) {
-                                gText.fill(232, 238, 248, 230);
+                                gText.fill(255, 233, 191, 230);
                             } else {
-                                gText.fill(232, 238, 248, 230);
+                                gText.fill(255, 233, 191, 230);
                             }
                             gText.text(label, item.x + cardW / 2, item.y + 8);
 
