@@ -3157,7 +3157,7 @@
             this.backPopupTexture = p.loadImage('./img/back_popup.png');
             this.linePopupTexture = p.loadImage('./img/icons/line_popup.png');
 
-            this.textFontFontick = p.loadFont("fonts/involve/involvesemibold.ttf");
+            this.textFontFontick = p.loadFont("fonts/Involve/involvesemibold.ttf");
             this.textFontMP = p.loadFont("fonts/mpro/multiroundpro.otf");
 
             this.fullscreen = false;
