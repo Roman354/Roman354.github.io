@@ -9,6 +9,11 @@
     p.gamePassed = false;
     p.buttonsArr = [];
     p.lang = window.navigator.language === "en"? "en" : "ru" || "en"; 
+    const ATTACK_READINESS_COLORS = {
+        reload: [255, 194, 120],
+        jam: [255, 140, 140],
+        ready: [120, 235, 170]
+    };
     
     // ТЕСТ Выбор уровня
     p.ENABLE_TEST_START_LEVEL_PICKER = false;
@@ -94,7 +99,13 @@
             "base.heal_amount": "+{value} HP",
             "stat.aura": "Дальность {value} для Support",
             "stat.support_range_tile": "Дальность {aura} для Support, союзникам {buff} к дальности",
-            "stat.fire_rate_buff": "Скорострельность +{value}",
+            "stat.label.damage": "Урон",
+            "stat.label.fire_rate": "Темп стрельбы",
+            "stat.label.range": "Дальность",
+            "stat.label.bounce": "Отскок",
+            "stat.label.radius": "Радиус",
+            "stat.label.multishot": "Мультивыстрел",
+            "stat.fire_rate_buff": "Темп стрельбы +{value}",
             "stat.range_buff": "Дальности +{value}",
             "stat.damage_buff": "Урон +{value}",
             "stat.crit_chance_buff": "Шанс крита +{value}",
@@ -111,7 +122,7 @@
             "stat.tile_effect": "Ячейка: {value}",
             "stat.tile_damage": "{value} к урону",
             "stat.tile_range": "{value} к дальности",
-            "stat.tile_fire_rate": "{value} к скорострельности",
+            "stat.tile_fire_rate": "{value} к темпа стрельбы",
             "stat.tile_gold": "+{value} золото за убийство",
             "stat.tile_gold_earned": "Заработано: {value}",
             "stat.level_progress": "УР {level} -> {next}",
@@ -120,11 +131,11 @@
             "abbr.seconds": "с",
             "tile.damage_up.name": "Урон",
             "tile.range_up.name": "Дальность",
-            "tile.fire_rate_up.name": "Скорострельность",
+            "tile.fire_rate_up.name": "Темп стрельбы",
             "tile.gold_on_kill.name": "Золото за убийство",
             "tile.damage_down.name": "Снижение урона",
             "tile.range_down.name": "Снижение дальности",
-            "tile.fire_rate_down.name": "Снижение скорострельности",
+            "tile.fire_rate_down.name": "Снижение темпа стрельбы",
             "tile.cell_debuff.name": "Заблокированная клетка",
             "tooltip.tile_actions.title": "Ячейка",
             "tooltip.tile_actions.text": "Открывает действия для ячейки под башней.",
@@ -220,6 +231,12 @@
             "base.heal_amount": "+{value} HP",
             "stat.aura": "Range {value} for Support",
             "stat.support_range_tile": "Range {aura} for Support, allies get {buff} range",
+            "stat.label.damage": "Damage",
+            "stat.label.fire_rate": "Fire Rate",
+            "stat.label.range": "Range",
+            "stat.label.bounce": "Bounce",
+            "stat.label.radius": "Radius",
+            "stat.label.multishot": "Multishot",
             "stat.fire_rate_buff": "Fire Rate +{value}",
             "stat.range_buff": "Range +{value}",
             "stat.damage_buff": "Damage +{value}",
@@ -2707,6 +2724,7 @@
             continue: "button.continue",
             startWave: "button.go",
             pause: "button.pause",
+            endStats: "button.stats",
             towerStats: p.game?.towerDamagePanelOpen ? "button.towers" : "button.stats"
         };
 
@@ -8013,17 +8031,17 @@
             this.rotateTo(desired, dt);
         }
 
-        getAttackReadinessInfo() {
+        getAttackReadinessInfo(target = null) {
             if (this.type.id === "support" || this.type.id === "singularity") {
                 return null;
             }
 
+            const info = target || {};
             if (this.reloadTimer > 0 && (this.reloadTime || 0) > 0) {
-                return {
-                    progress: p.constrain(1 - this.reloadTimer / this.reloadTime, 0, 1),
-                    color: [255, 194, 120],
-                    isReady: false
-                };
+                info.progress = p.constrain(1 - this.reloadTimer / this.reloadTime, 0, 1);
+                info.color = ATTACK_READINESS_COLORS.reload;
+                info.isReady = false;
+                return info;
             }
 
             if ((this.fireRate || 0) <= 0) {
@@ -8035,11 +8053,26 @@
                 ? p.constrain(1 - this.cooldown / cycleTime, 0, 1)
                 : 1;
 
-            return {
-                progress,
-                color: this.jamTimer > 0 ? [255, 140, 140] : [120, 235, 170],
-                isReady: this.cooldown <= 0
-            };
+            info.progress = progress;
+            info.color = this.jamTimer > 0 ? ATTACK_READINESS_COLORS.jam : ATTACK_READINESS_COLORS.ready;
+            info.isReady = this.cooldown <= 0;
+            return info;
+        }
+
+        getCachedAttackReadinessInfo() {
+            const frame = p.frameCount || 0;
+            const updateInterval = Math.max(1, this.readinessBarUpdateInterval || 1);
+            const shouldRefresh =
+                this._cachedAttackReadinessFrame < 0 ||
+                updateInterval === 1 ||
+                frame % updateInterval === this.readinessBarUpdatePhase;
+
+            if (shouldRefresh) {
+                this._cachedAttackReadinessInfo = this.getAttackReadinessInfo(this._cachedAttackReadinessInfo);
+                this._cachedAttackReadinessFrame = frame;
+            }
+
+            return this._cachedAttackReadinessInfo;
         }
 
         getCleaverSwordPose() {
@@ -8209,19 +8242,7 @@
         drawAttackReadinessBar() {
             if (p.showTowerAttackReadinessBar === false) return;
 
-            const frame = p.frameCount || 0;
-            const updateInterval = Math.max(1, this.readinessBarUpdateInterval || 1);
-            const shouldRefresh =
-                this._cachedAttackReadinessFrame < 0 ||
-                updateInterval === 1 ||
-                frame % updateInterval === this.readinessBarUpdatePhase;
-
-            if (shouldRefresh) {
-                this._cachedAttackReadinessInfo = this.getAttackReadinessInfo();
-                this._cachedAttackReadinessFrame = frame;
-            }
-
-            const info = this._cachedAttackReadinessInfo;
+            const info = this.getCachedAttackReadinessInfo();
             if (!info) return;
 
             const progressW = this.readinessBarW * info.progress;
@@ -8633,8 +8654,6 @@
                 if (isHovered && this.type.id !== "singularity") {
                     drawHoverRing();
                 }
-
-                this.drawAttackReadinessBar();
 
                 p.noStroke();
                 p.fill(255);
@@ -14091,7 +14110,7 @@
                         hoverKey = item.key;
                         hoverItem = item;
                         hoverTower = p.TOWER_TYPES[item.key];
-                        hoverX = panelX - 190;
+                        hoverX = panelX - 252;
                         hoverY = y + 36;
                         break;
                     }
@@ -14529,6 +14548,7 @@
             const formatPlainNumber = (value) => `${roundStat(value)}`;
             const createTileAdjustedStat = ({
                 icon,
+                label,
                 tone,
                 baseValue,
                 adjustedValue,
@@ -14539,6 +14559,7 @@
                 nextText
             }) => ({
                 icon,
+                label,
                 tone,
                 ...this.buildTileAdjustedLine(
                     baseValue,
@@ -14570,6 +14591,14 @@
                 : undefined;
             const supportAuraGoldChance = supportSelfTileEffects.goldChance || 0;
             const supportAuraGoldBonus = supportSelfTileEffects.goldBonus || 0;
+            const statLabels = {
+                damage: p.t("stat.label.damage"),
+                fireRate: p.t("stat.label.fire_rate"),
+                range: p.t("stat.label.range"),
+                bounce: p.t("stat.label.bounce"),
+                radius: p.t("stat.label.radius"),
+                multishot: p.t("stat.label.multishot")
+            };
             const jamMult = (tower.jamTimer > 0 && type.id !== "support")
                 ? Math.max(0.2, Math.min(1, tower.jamFireRateMult || 1))
                 : 1;
@@ -14658,6 +14687,7 @@
                 lines = [
                     createTileAdjustedStat({
                         icon: p.icons.range,
+                        label: statLabels.range,
                         tone: [90, 170, 255],
                         baseValue: curAuraRangeBase,
                         adjustedValue: curAuraRangeTotal,
@@ -14727,6 +14757,7 @@
                 lines = [
                     createTileAdjustedStat({
                         icon: p.icons.damage,
+                        label: statLabels.damage,
                         tone: [220, 90, 90],
                         baseValue: curDmgBase,
                         adjustedValue: curDmg,
@@ -14744,6 +14775,7 @@
                     },
                     createTileAdjustedStat({
                         icon: p.icons.range,
+                        label: statLabels.range,
                         tone: [90, 170, 255],
                         baseValue: curRangeBase,
                         adjustedValue: curRange,
@@ -14801,6 +14833,7 @@
                 lines = [
                     createTileAdjustedStat({
                         icon: p.icons.damage,
+                        label: statLabels.damage,
                         tone: [220, 90, 90],
                         baseValue: curDamageBase,
                         adjustedValue: curDamage,
@@ -14810,6 +14843,7 @@
                     }),
                     appendJamPenaltyToLine(createTileAdjustedStat({
                         icon: p.icons.fireRate,
+                        label: statLabels.fireRate,
                         tone: [110, 220, 140],
                         baseValue: curAttackRateBase?.interval ?? 0,
                         adjustedValue: curAttackRate?.interval ?? 0,
@@ -14821,6 +14855,7 @@
                     })),
                     {
                         icon: p.icons.range,
+                        label: statLabels.range,
                         text: "9999",
                         tone: [120, 200, 255]
                     }
@@ -14856,6 +14891,7 @@
                 lines = [
                     createTileAdjustedStat({
                         icon: p.icons.damage,
+                        label: statLabels.damage,
                         tone: [220, 90, 90],
                         baseValue: curDamageBase,
                         adjustedValue: curDamage,
@@ -14865,6 +14901,7 @@
                     }),
                     appendJamPenaltyToLine(createTileAdjustedStat({
                         icon: p.icons.fireRate,
+                        label: statLabels.fireRate,
                         tone: [110, 220, 140],
                         baseValue: curAttackRateBase?.interval ?? 0,
                         adjustedValue: curAttackRate?.interval ?? 0,
@@ -14884,6 +14921,7 @@
                     })),
                     createTileAdjustedStat({
                         icon: p.icons.range,
+                        label: statLabels.range,
                         tone: [90, 170, 255],
                         baseValue: curRangeBase,
                         adjustedValue: curRange,
@@ -14895,6 +14933,7 @@
                 if ((cur.projectileCount ?? 1) > 1 || (next?.projectileCount ?? 1) > 1) {
                     lines.push({
                         icon: p.icons.multishot,
+                        label: statLabels.multishot,
                         text: statLine(
                             Math.max(1, cur.projectileCount ?? 1),
                             next ? Math.max(1, next.projectileCount ?? 1) : undefined
@@ -14908,6 +14947,7 @@
                     const nextSplash = next ? Math.round(next.splashRadius ?? 0) : undefined;
                     lines.push({
                         icon: p.icons.aoe,
+                        label: statLabels.radius,
                         text: statLine(curSplash, nextSplash),
                         tone: [255, 170, 110]
                     });
@@ -14932,6 +14972,7 @@
                     const nextBounces = (next && next.bounces != null) ? next.bounces : undefined;
                     lines.push({
                         icon: p.icons.bounce,
+                        label: statLabels.bounce,
                         text: statLine(cur.bounces ?? 0, nextBounces),
                         tone: [170, 170, 170]
                     });
@@ -15070,7 +15111,7 @@
                 lines.push(specialShotLine);
             }
 
-            const w = 252;
+            const w = 287;
             const headH = 28;
             const rowH = 22;
             const pad = 10;
@@ -15149,8 +15190,14 @@
                 ctx.textSize(13);
                 const textX = ox + pad + iconSize + 10;
                 const textY = rowY + iconSize / 2;
+                let valueX = textX;
+                if (line.label) {
+                    ctx.fill(245, 248, 255, alpha(255));
+                    ctx.text(line.label, textX, textY);
+                    valueX += ctx.textWidth(line.label) + 8;
+                }
                 if (Array.isArray(line.segments) && line.segments.length > 0) {
-                    let cursorX = textX;
+                    let cursorX = valueX;
                     for (const segment of line.segments) {
                         if (!segment?.text) continue;
                         const color = segment.color || [245, 248, 255];
@@ -15159,7 +15206,8 @@
                         cursorX += ctx.textWidth(segment.text);
                     }
                 } else {
-                    ctx.text(line.text, textX, textY);
+                    ctx.fill(245, 248, 255, alpha(255));
+                    ctx.text(line.text, valueX, textY);
                 }
             });
             ctx.pop?.();
@@ -15434,11 +15482,19 @@
             const iconSize = 18;
             const toBuffPercent = (mult) => `${Math.round((mult - 1) * 100)}%`;
             const burnStackCap = 5;
+            const statLabels = {
+                damage: p.t("stat.label.damage"),
+                fireRate: p.t("stat.label.fire_rate"),
+                range: p.t("stat.label.range"),
+                bounce: p.t("stat.label.bounce"),
+                radius: p.t("stat.label.radius"),
+                multishot: p.t("stat.label.multishot")
+            };
 
             let lines = [];
             if (t.id === "support") {
                 lines = [
-                    { icon: p.icons.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] },
+                    { icon: p.icons.range, label: statLabels.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] },
                     { icon: p.icons.fireRate, text: p.t("stat.fire_rate_buff", { value: toBuffPercent(base.fireRateBoost) }), tone: [110, 220, 140] },
                     // { icon: p.icons.damage, text: `Damage Buff: ${toBuffPercent(base.damageBoost)}`, tone: [220, 90, 90] },
                     { icon: p.icons.range, text: p.t("stat.range_buff", { value: toBuffPercent(base.rangeBoost) }), tone: [110, 220, 255] },
@@ -15448,9 +15504,9 @@
                 const charge = Math.round((base.chargePerEnemy || 0) * 1000) / 10;
 
                 lines = [
-                    { icon: p.icons.damage, text: `${base.damage}`, tone: [220, 90, 90] },
+                    { icon: p.icons.damage, label: statLabels.damage, text: `${base.damage}`, tone: [220, 90, 90] },
                     { icon: p.icons.fireRate, text: p.t("stat.charge_per_enemy", { value: this.formatChargeRate(charge) }), tone: [110, 220, 140] },
-                    { icon: p.icons.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] }
+                    { icon: p.icons.range, label: statLabels.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] }
                 ];
 
                 if (base.slowFactor) {
@@ -15485,9 +15541,9 @@
                 const attackRate = this.getTowerAttackRateInfo(t, base);
 
                 lines = [
-                    { icon: p.icons.damage, text: `${base.damage}`, tone: [220, 90, 90] },
-                    { icon: p.icons.fireRate, text: `${this.formatAttackRateText(attackRate)}`, tone: [110, 220, 140] },
-                    { icon: p.icons.range, text: `9999`, tone: [120, 200, 255] }
+                    { icon: p.icons.damage, label: statLabels.damage, text: `${base.damage}`, tone: [220, 90, 90] },
+                    { icon: p.icons.fireRate, label: statLabels.fireRate, text: `${this.formatAttackRateText(attackRate)}`, tone: [110, 220, 140] },
+                    { icon: p.icons.range, label: statLabels.range, text: `9999`, tone: [120, 200, 255] }
                 ];
 
                 if (base.slowFactor) {
@@ -15502,20 +15558,22 @@
             } else {
                 const attackRate = this.getTowerAttackRateInfo(t, base);
                 lines = [
-                    { icon: p.icons.damage, text: this.formatTowerDamageText(t, base, base.damage), tone: [220, 90, 90] },
+                    { icon: p.icons.damage, label: statLabels.damage, text: this.formatTowerDamageText(t, base, base.damage), tone: [220, 90, 90] },
                     {
                         icon: p.icons.fireRate,
+                        label: statLabels.fireRate,
                         text: t.id === "cat_revolver"
                             ? `${this.formatAttackRateText(attackRate, { showBurst: true })}`
                             : `${this.formatAttackRateText(attackRate)}`,
                         tone: [110, 220, 140]
                     },
-                    { icon: p.icons.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] }
+                    { icon: p.icons.range, label: statLabels.range, text: `${Math.round(base.range)}`, tone: [90, 170, 255] }
                 ];
 
                 if ((base.projectileCount ?? 1) > 1) {
                     lines.push({
                         icon: p.icons.multishot,
+                        label: statLabels.multishot,
                         text: `${Math.max(1, base.projectileCount ?? 1)}`,
                         tone: [240, 210, 120]
                     });
@@ -15533,6 +15591,7 @@
                 if (base.splashRadius) {
                     lines.push({
                         icon: p.icons.aoe,
+                        label: statLabels.radius,
                         text: `${Math.round(base.splashRadius)}`,
                         tone: [255, 170, 110]
                     });
@@ -15551,6 +15610,7 @@
                 if (base.bounces) {
                     lines.push({
                         icon: p.icons.bounce,
+                        label: statLabels.bounce,
                         text: `${base.bounces}`,
                         tone: [170, 170, 170]
                     });
@@ -15599,7 +15659,7 @@
                 }
             }
             
-            const w = 190;
+            const w = 224;
             const h = headH + lines.length * rowH + pad * 2;
 
             return {
@@ -15651,10 +15711,19 @@
                 ctx.fill(240);
                 ctx.textAlign(p.LEFT, p.CENTER);
                 ctx.textSize(13);
+                const textX = ox + pad + iconSize + 10;
+                const textY = rowY + iconSize / 2;
+                let valueX = textX;
+                if (line.label) {
+                    ctx.fill(240);
+                    ctx.text(line.label, textX, textY);
+                    valueX += ctx.textWidth(line.label) + 8;
+                }
+                ctx.fill(240);
                 ctx.text(
                     line.text,
-                    ox + pad + iconSize + 10,
-                    rowY + iconSize / 2
+                    valueX,
+                    textY
                 );
             });
             ctx.pop?.();
@@ -16351,6 +16420,45 @@
 
             return false;
         }
+
+        drawTowerAttackReadinessBars() {
+            if (p.showTowerAttackReadinessBar === false) return;
+            if (!this.towers || this.towers.length === 0) return;
+
+            const towers = this.towers;
+            const originX = -p.width / 2;
+            const originY = -p.height / 2;
+
+            p.push();
+                p.translate(0, 0, 4);
+                p.rectMode(p.CORNER);
+                p.noStroke();
+
+                for (const tower of towers) {
+                    const info = tower.getCachedAttackReadinessInfo();
+                    if (!info) continue;
+
+                    const progressW = tower.readinessBarW * info.progress;
+                    const barX = originX + tower.x + tower.readinessBarX;
+                    const barY = originY + tower.y + tower.readinessBarY;
+                    const centerX = barX + tower.readinessBarW / 2;
+                    const progressX = centerX - progressW / 2;
+
+                    p.fill(12, 16, 24, 150);
+                    p.rect(barX, barY, tower.readinessBarW, tower.readinessBarH, 2);
+
+                    if (progressW > 0.01) {
+                        p.fill(info.color[0], info.color[1], info.color[2], info.isReady ? 225 : 205);
+                        p.rect(progressX, barY, progressW, tower.readinessBarH, 2);
+                    }
+
+                    if (info.isReady) {
+                        p.fill(255, 255, 255, 45);
+                        p.rect(barX, barY, tower.readinessBarW, 1.2, 1);
+                    }
+                }
+            p.pop();
+        }
         
         draw() {
             const perfDrawStart = this.getPerfNow();
@@ -16363,6 +16471,7 @@
 
                 let perfStart = this.getPerfNow();
                 for (const t of this.towers) t.draw();
+                this.drawTowerAttackReadinessBars();
                 this.addPerfSample("drawTowers", this.getPerfNow() - perfStart);
 
                 perfStart = this.getPerfNow();
