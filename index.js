@@ -3569,7 +3569,6 @@
 
             const diffBtnW = Math.round(p.width * 0.55);
             const diffBtnH = Math.round(p.height * 0.09);
-            console.log(diffBtnW, diffBtnH)
             const diffBtnX = Math.round((p.width - diffBtnW) / 2);
             const diffStartY = Math.round(p.height * 0.59);
             const diffGap = Math.round(diffBtnH * 0.3);
@@ -3882,7 +3881,6 @@
                             p.image(p.variables.bottomHudTexture, x, y, cardW, cardH);
                         }
                         if (card.icon) {
-                            console.log(card)
                             if(card.flag === "wave")
                                 p.image(card.icon, x + iconX-4, y + iconOffsetY-6, iconSize+10, iconSize+10);
                             else if(card.flag === "score")
