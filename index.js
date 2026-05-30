@@ -8,7 +8,7 @@
     p.gameEnded = false;
     p.gamePassed = false;
     p.buttonsArr = [];
-    p.lang = window.navigator.language === "en"? "en" : "ru" || "en"; 
+    p.lang = window.navigator.language === "ru"? "ru" : "en" || "en"; 
     const ATTACK_READINESS_COLORS = {
         reload: [255, 194, 120],
         jam: [255, 140, 140],
@@ -16,8 +16,12 @@
     };
     
     // ТЕСТ Выбор уровня
+    // Del -> 
+    // p.ENABLE_TEST_START_LEVEL_PICKER переключается для menu.testLevelPickerEnabled который отрисовывает тестовое меню где можно выбирать уровни/деньги/доступность башен
+    // в идеале удалить все что связано с testLevelPickerEnabled 
+    // так же удалить запись в локал сторейдж
     p.ENABLE_TEST_START_LEVEL_PICKER = false;
-
+    // Del <-
     p.I18N = {
         ru: {
             "tower.basic": "Basic",
@@ -86,7 +90,7 @@
             "wave.intro": "Волна {wave}",
             "wave.auto_start": "Автостарт через {seconds}с",
             "label.boss": "БОСС",
-            "panel.towers": "БАШНИ",
+            "panel.towers": "Башни",
             "panel.tower_damage": "Урон башен",
             "panel.wave_dmg": "Урон волны",
             "panel.total_dmg": "Общий урон",
@@ -122,16 +126,16 @@
             "stat.tile_effect": "Ячейка: {value}",
             "stat.tile_damage": "{value} к урону",
             "stat.tile_range": "{value} к дальности",
-            "stat.tile_fire_rate": "{value} к темпа стрельбы",
+            "stat.tile_fire_rate": "{value} к темпу стрельбы",
             "stat.tile_gold": "+{value} золото за убийство",
             "stat.tile_gold_earned": "Заработано: {value}",
             "stat.level_progress": "УР {level} -> {next}",
             "stat.level_max": "УР {level} МАКС",
             "stat.burst": "Серия {value}",
             "abbr.seconds": "с",
-            "tile.damage_up.name": "Урон",
-            "tile.range_up.name": "Дальность",
-            "tile.fire_rate_up.name": "Темп стрельбы",
+            "tile.damage_up.name": "Повышение урона",
+            "tile.range_up.name": "Повышение дальности",
+            "tile.fire_rate_up.name": "Повышение темпа стрельбы",
             "tile.gold_on_kill.name": "Золото за убийство",
             "tile.damage_down.name": "Снижение урона",
             "tile.range_down.name": "Снижение дальности",
@@ -142,9 +146,9 @@
             "tooltip.tile_buy.title": "Создать ячейку",
             "tooltip.tile_buy.text": "Тип: {tile}",
             "tooltip.tile_clear.title": "Очистить ячейку",
-            "tooltip.tile_clear.text": "Убирает эффект: {tile}",
-            "tooltip.tile_effect_prefix": "Эффект: {value}",
-            "tooltip.support_tile_effect_prefix": "Эффект {name} башни: {value}",
+            "tooltip.tile_clear.text": "Убирает: {tile}",
+            "tooltip.tile_effect_prefix": "{value}",
+            "tooltip.support_tile_effect_prefix": "{name} башни: {value}",
             "tooltip.tile_effect_blocked": "Башню нельзя поставить",
             "tile.info.buff": "Бафф ячейка",
             "tile.info.debuff": "Дебафф ячейка",
@@ -218,8 +222,8 @@
             "wave.intro": "Wave {wave}",
             "wave.auto_start": "Auto start in {seconds}s",
             "label.boss": "BOSS",
-            "panel.towers": "TOWERS",
-            "panel.tower_damage": "Tower Damage",
+            "panel.towers": "Towers",
+            "panel.tower_damage": "Tower damage",
             "panel.wave_dmg": "Wave DMG",
             "panel.total_dmg": "Total DMG",
             "panel.wave": "Wave",
@@ -261,22 +265,22 @@
             "stat.level_max": "LVL {level} MAX",
             "stat.burst": "Burst {value}",
             "abbr.seconds": "s",
-            "tile.damage_up.name": "Damage",
-            "tile.range_up.name": "Range",
-            "tile.fire_rate_up.name": "Fire Rate",
+            "tile.damage_up.name": "Damage Increase",
+            "tile.range_up.name": "Range Increase",
+            "tile.fire_rate_up.name": "Fire Rate Increase",
             "tile.gold_on_kill.name": "Gold on Kill",
-            "tile.damage_down.name": "Damage Down",
-            "tile.range_down.name": "Range Down",
-            "tile.fire_rate_down.name": "Fire Rate Down",
+            "tile.damage_down.name": "Damage Reduce",
+            "tile.range_down.name": "Range Reduce",
+            "tile.fire_rate_down.name": "Fire Rate Reduce",
             "tile.cell_debuff.name": "Blocked Cell",
             "tooltip.tile_actions.title": "Tile",
             "tooltip.tile_actions.text": "Opens the actions for the tile under this tower.",
             "tooltip.tile_buy.title": "Create Tile",
             "tooltip.tile_buy.text": "Type: {tile}",
             "tooltip.tile_clear.title": "Clear Tile",
-            "tooltip.tile_clear.text": "Removes effect: {tile}",
-            "tooltip.tile_effect_prefix": "Effect: {value}",
-            "tooltip.support_tile_effect_prefix": "{name} tower effect: {value}",
+            "tooltip.tile_clear.text": "Removes: {tile}",
+            "tooltip.tile_effect_prefix": "{value}",
+            "tooltip.support_tile_effect_prefix": "{name} tower{value}",
             "tooltip.tile_effect_blocked": "Tower placement is blocked",
             "tile.info.buff": "Buff Tile",
             "tile.info.debuff": "Debuff Tile",
@@ -465,7 +469,9 @@
             damageDebuff: p.loadImage('./img/damageDebuff.png'),
             rangeDebuff: p.loadImage('./img/rangeDebuff.png'),
             speedDebuff: p.loadImage('./img/speedDebuff.png'),
-            cellDebuff: p.loadImage('./img/cellDebuff.png')
+            cellDebuff: p.loadImage('./img/cellDebuff.png'),
+            buffArrow: p.loadImage('./img/buff_arrow.png'),
+            debuffArrow: p.loadImage('./img/debuff_arrow.png')
         };
         p.variables.gameMusic = new Audio('sounds/gamemusic.mp3'); 
         p.variables.gameMusic.loop = true;
@@ -2911,7 +2917,6 @@
             hard: 1400
         }
     };
-    //ТЕСТ
     p.BUILD_SPECIAL_TILE_TYPES = {
         damage_up: {
             id: "damage_up",
@@ -3318,7 +3323,7 @@
             if (this.endScoreGoldBonusApplied) return this.endScoreGoldBonus;
 
             const remainingGold = Math.max(0, Number(p.game?.money ?? 0));
-            const goldBonus = Math.floor(remainingGold / 2);
+            const goldBonus = Math.floor(remainingGold / 5);
             this.endScoreGoldBonus = goldBonus;
             if (goldBonus > 0) {
                 p.variables.score += goldBonus;
@@ -4514,7 +4519,7 @@
 
             if (mode === "choice") {
                 const layout = {
-                    centerY: p.height / 2 - 18,
+                    centerY: p.height / 2 - 60,
                     cardH: 350,
                     finishX: p.width / 2 - 148,
                     continueX: p.width / 2 + 8,
@@ -4527,8 +4532,8 @@
             }
 
             const layout = mode === "lose"
-                ? { centerY: p.height / 2 - 18, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 }
-                : { centerY: p.height / 2 - 18, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 };
+                ? { centerY: p.height / 2 - 60, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 }
+                : { centerY: p.height / 2 - 60, cardH: 350, statsX: p.width / 2 - 150, okX: p.width / 2 + 10, btnYGap: 18 };
 
             const buttonY = Math.round(layout.centerY + layout.cardH / 2 + layout.btnYGap);
             setPos("endStats", layout.statsX, buttonY);
@@ -4581,14 +4586,14 @@
                     p.angleMode(p.DEGREES);
                     p.rectMode(p.CENTER);
                     p.texture(p.variables.textureWinLose)
-                    p.translate( 0, -18, 36);
-                    p.rect(0, 0, 420, 350);
+                    p.translate( 0, -60, 36);
+                    p.rect(0, 40, 420, 430);
 
                     p.translate( 0, 0, 2);
                     p.fill(255, 233, 191);
                     p.textAlign(p.CENTER, p.CENTER);
                     p.textSize(clearedMainCampaign ? 30 : 28);
-                    p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -100);
+                    p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -83);
 
                     p.textSize(22);
                     p.fill(255, 245, 228);
@@ -4601,7 +4606,7 @@
                     this.drawEndInfoRows(rows, {
                         rowW: 330,
                         rowH: 42,
-                        startY: -25,
+                        startY: 5,
                         rowGap: 48,
                         iconX: -124,
                         labelX: -96,
@@ -4655,14 +4660,14 @@
                     p.angleMode(p.DEGREES);
                     p.rectMode(p.CENTER);
                     p.texture(p.variables.textureWinLose)
-                    p.translate( 0, -18, 36);
-                    p.rect(0, 0, 420, 350);
+                    p.translate( 0, -60, 36);
+                    p.rect(0, 40, 420, 430);
                 
                     p.translate( 0, 0, 2);
                     p.textSize(30)
                     p.fill(255, 233, 191);
                     p.textAlign(p.CENTER, p.CENTER);
-                    p.text(p.t("game.congratulations"), 0, -100);
+                    p.text(p.t("game.congratulations"), 0, -83);
                     // p.textSize(22)
                     // p.fill(255, 245, 228);
                     // p.text(p.t("game.finish_or_continue"), 0, -88);
@@ -4670,7 +4675,7 @@
                     this.drawEndInfoRows(choiceRows, {
                         rowW: 330,
                         rowH: 42,
-                        startY: -25,
+                        startY: 5,
                         rowGap: 48,
                         iconX: -124,
                         labelX: -96,
@@ -9622,7 +9627,9 @@
             this._towerDamagePanelDirty = true;
             this._towerDamagePanelNextRefresh = 0;
 
-            //ТЕСТ
+            //ТЕСТ 
+            //Del ->
+            // для вывода фпса
             this.perfMonitorEnabled = false;
             this.perfStats = {
                 fps: 0,
@@ -9637,6 +9644,7 @@
                     sections: {}
                 }
             };
+            //Del <-
             this._perfFrameStart = 0;
             this._perfLogicStepsFrame = 0;
         }
@@ -11818,13 +11826,15 @@
 
         start(diff, level = 1) {
             const preset = p.DIFFICULTY_PRESETS[diff] || p.DIFFICULTY_PRESETS.normal;
-            // ТЕСТ
+            // ТЕСТ 
+            //Del ->
             const DEBUG_TEST_MODE = {
                 enabled: false,
-                startWave: 14,
+                startWave: 3,
                 startMoney: 1500,
                 endlessMode: true
             };
+            //Del <-
             this.difficulty = diff || "normal";
             this.difficultyProfile = preset;
             const pathDifficulty = this.getPathDifficultyKeyForGameDifficulty(this.difficulty);
@@ -12529,12 +12539,14 @@
         }
 
         getUpgradeMenuTooltipLayout(panel) {
-            const boxW = 244;
+            const hasSideIcon = Boolean(panel?.sideIcon);
+            const sideIconSpace = hasSideIcon ? 34 : 0;
+            const boxW = hasSideIcon ? 272 : 244;
             const pad = 10;
             const bodySize = 12;
             const headerH = 28;
             const lineH = 14;
-            const textMaxW = boxW - pad * 2;
+            const textMaxW = boxW - pad * 2 - sideIconSpace;
             const wrapText = (text = "") => {
                 const source = `${text}`.trim();
                 if (!source) return [];
@@ -12580,7 +12592,8 @@
                 headerH,
                 lineH,
                 bodyLines,
-                detailLines
+                detailLines,
+                sideIconSpace
             };
         }
 
@@ -12605,7 +12618,8 @@
                 headerH,
                 lineH,
                 bodyLines,
-                detailLines
+                detailLines,
+                sideIconSpace
             } = this.getUpgradeMenuTooltipLayout(panel);
 
             p.push();
@@ -12637,29 +12651,43 @@
                 p.noStroke();
                 // p.fill(16, 22, 34, 236 * bgAlphaScale);
                 p.push();
+                    p.tint(255, 255, 255, 255 * bgAlphaScale);
                     p.texture(p.variables.backPopupTexture)
                     p.rect(tx, ty, boxW, boxH, 8);
+                    p.noTint();
                 p.pop();
                 const headerColor = panel.headerColor || [58, 108, 176];
                 // p.fill(headerColor[0], headerColor[1], headerColor[2], 160 * bgAlphaScale);
                 // p.rect(tx, ty, boxW, headerH, 8, 8, 0, 0);
 
+                if (panel.sideIcon) {
+                    const iconSize = 32;
+                    p.push();
+                        p.tint(255, 255, 255, 255 * textAlphaScale);
+                        p.texture(panel.sideIcon);
+                        p.rect(tx + pad -5, ty + 5, iconSize, iconSize);
+                        p.noTint();
+                    p.pop();
+                }
+
+                const textX = tx + pad + sideIconSpace;
                 p.fill(255, 255, 255, 255 * textAlphaScale);
                 p.textSize(titleSize);
-                p.text(panel.title || "", tx + pad, ty + 7);
+                p.text(panel.title || "", textX, ty + 7);
 
                 p.fill(220, 230, 240, 255 * textAlphaScale);
                 p.textSize(bodySize);
                 let textY = ty + headerH + pad - 2;
                 for (const line of bodyLines) {
-                    p.text(line, tx + pad, textY);
+                    p.text(line, textX, textY);
                     textY += lineH;
                 }
                 if (detailLines.length > 0) {
-                    p.fill(150, 214, 255, 255 * textAlphaScale);
+                    const detailColor = panel.detailColor || [97, 30, 21];
+                    p.fill(detailColor[0], detailColor[1], detailColor[2], 255 * textAlphaScale);
                     textY += 4;
                     for (const line of detailLines) {
-                        p.text(line, tx + pad, textY);
+                        p.text(line, textX, textY);
                         textY += lineH;
                     }
                 }
@@ -12691,6 +12719,8 @@
                 text: this.getTileDisplayName(tile.id),
                 detail,
                 kind: tile.kind || "positive",
+                sideIcon: tile.kind === "negative" ? p.pathTextures?.debuffArrow : p.pathTextures?.buffArrow,
+                detailColor: tile.kind === "negative" ? [97, 30, 21] : [20, 74, 15],
                 headerColor: tile.kind === "negative" ? [196, 82, 82] : [58, 108, 176],
                 side: "top"
             };
@@ -13907,7 +13937,7 @@
                 }
 
                 p.noStroke();
-                p.fill(220, 230, 240);
+                p.fill(255, 233, 191);
                 p.textFont(p.variables.textFontFontick);
                 p.textAlign(p.LEFT, p.CENTER);
                 p.textSize(16);
