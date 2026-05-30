@@ -4351,7 +4351,7 @@
 
 
             p.push();
-                p.fill('#fff') 
+                p.fill(255, 233, 191) 
                 p.translate(0,0,31)
                 p.textFont(p.variables.textFontFontick)
                 p.textAlign(p.CENTER, p.CENTER)
@@ -4403,10 +4403,10 @@
                     p.textSize(row.key === "attack_readiness_bar" ? 15 : 18);
                     p.text(row.label, rx + 68, ry + row.h / 2 + 1);
 
-                    p.fill(31, 17, 24, 235);
-                    p.stroke(246, 219, 178, 80);
-                    p.strokeWeight(1.2);
-                    p.rect(valueX, ry + 9, row.valueW, row.h - 18, 12);
+                    // p.fill(31, 17, 24, 235);
+                    // p.stroke(246, 219, 178, 80);
+                    // p.strokeWeight(1.2);
+                    // p.rect(valueX, ry + 9, row.valueW, row.h - 18, 12);
 
                     p.noStroke();
                     p.fill(255, 242, 222);
@@ -4585,7 +4585,7 @@
                     p.rect(0, 0, 420, 350);
 
                     p.translate( 0, 0, 2);
-                    p.fill('#fff');
+                    p.fill(255, 233, 191);
                     p.textAlign(p.CENTER, p.CENTER);
                     p.textSize(clearedMainCampaign ? 30 : 28);
                     p.text(clearedMainCampaign ? p.t("game.congratulations") : p.t("game.lost"), 0, -100);
@@ -4660,7 +4660,7 @@
                 
                     p.translate( 0, 0, 2);
                     p.textSize(30)
-                    p.fill('#fff');
+                    p.fill(255, 233, 191);
                     p.textAlign(p.CENTER, p.CENTER);
                     p.text(p.t("game.congratulations"), 0, -100);
                     // p.textSize(22)
